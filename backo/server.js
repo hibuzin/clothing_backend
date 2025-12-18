@@ -26,7 +26,7 @@ app.use('/api/products', require('./routes/product'));
 
 
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/clothing';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://a54527177_db_user:<db_password>@cluster0.pbf7dfj.mongodb.net/';
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('mongoDB Connected'))
