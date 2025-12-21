@@ -1,23 +1,20 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
-
 import 'package:http/http.dart' as http;
-
 import 'myaccount.dart';
 
-// ==========================================
-// 1. AUTH SERVICE (Networking Logic)
-// ==========================================
-class AuthService {
-  // IMPORTANT:
-  // - Android Emulator: use 'http://10.0.2.2:5000/api/auth'
-  // - iOS Simulator:    use 'http://127.0.0.1:5000/api/auth'
-  // - Physical Device:  use 'http://YOUR_PC_IP_ADDRESS:5000/api/auth'
-  final String baseUrl = 'http://127.0.0.1:5000/api/auth';
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
-  Future<Map<String, dynamic>> login(String email, String password) async {
-    final url = Uri.parse('$baseUrl/login');
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final String _baseUrl = 'https://clothing-backend-7.onrender.com/api/auth';
+
+  Future<Map<String, dynamic>> _login(String email, String password) async {
+    final url = Uri.parse('$_baseUrl/login');
 
     try {
       final response = await http.post(
@@ -41,24 +38,11 @@ class AuthService {
       rethrow; // Pass the error up to the UI
     }
   }
-}
 
-// ==========================================
-// 2. LOGIN SCREEN (UI Logic)
-// ==========================================
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
-
-  @override
-  State<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  final AuthService _authService = AuthService(); // Instance of our service
   bool _isLoading = false;
 
   @override
@@ -76,8 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final email = _emailController.text.trim();
         final password = _passwordController.text.trim();
 
-        // Call the backend
-        final result = await _authService.login(email, password);
+        final result = await _login(email, password);
 
         if (!mounted) return;
 
@@ -85,7 +68,6 @@ class _LoginScreenState extends State<LoginScreen> {
         final token = result['token'];
         final userEmail = result['user']['email'];
 
-        // Success UI Feedback
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Login Successful! Welcome $userName'),
@@ -95,20 +77,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
         print("Logged in. Token: $token");
 
-        // Navigate to MyAccount screen
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => MyAccountScreen(
-              userName: userName,
-              userEmail: userEmail,
-              token: token,
-            ),
-          ),
+          MaterialPageRoute(builder: (context) => MyAccountScreen()),
         );
       } catch (e) {
         if (!mounted) return;
-        // Error UI Feedback
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString().replaceAll('Exception: ', '')),
@@ -160,10 +134,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
-                    if (value == null || value.isEmpty)
+                    if (value == null || value.isEmpty) {
                       return 'Please enter your email';
-                    if (!value.contains('@'))
+                    }
+                    if (!value.contains('@')) {
                       return 'Please enter a valid email';
+                    }
                     return null;
                   },
                 ),
@@ -177,10 +153,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   obscureText: true,
                   validator: (value) {
-                    if (value == null || value.isEmpty)
+                    if (value == null || value.isEmpty) {
                       return 'Please enter your password';
-                    if (value.length < 6)
+                    }
+                    if (value.length < 6) {
                       return 'Password must be at least 6 characters';
+                    }
                     return null;
                   },
                 ),
