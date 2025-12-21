@@ -11,6 +11,8 @@ const router = express.Router();
 router.post('/add', auth, async (req, res) => {
     try {
         const { productId, quantity } = req.body;
+        console.log('USER =>', req.user);
+
 
         const product = await Product.findById(productId);
         if (!product) {
