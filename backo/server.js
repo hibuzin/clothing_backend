@@ -25,7 +25,7 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/categories', require('./routes/category'), categoryRoutes);
 app.use('/api/subcategories', require('./routes/subcategory'), subCategoryRoutes);
 app.use('/api/products', require('./routes/product'));
-app.use('/api/cart', cartRoutes);
+app.use('/api/cart', require('./routes/cart'));
 app.use('/api/wishlist', wishlistRoutes);
 
 
