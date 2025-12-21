@@ -8,9 +8,12 @@ const authRoutes = require('./routes/auth');
 const categoryRoutes = require('./routes/category');
 const subCategoryRoutes = require('./routes/subcategory');
 const productRoutes = require('./routes/product');
+const cartRoutes = require('./routes/cart');
+const wishlistRoutes = require('./routes/wishlist');
 
 
-
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
 
 
 const app = express();
@@ -19,14 +22,23 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/uploads', express.static('uploads'));
-app.use('/api/categories', require('./routes/category'));
-app.use('/api/subcategories', require('./routes/subcategory'));
+app.use('/api/categories', require('./routes/category'), categoryRoutes);
+app.use('/api/subcategories', require('./routes/subcategory'), subCategoryRoutes);
 app.use('/api/products', require('./routes/product'));
+app.use('/api/cart', cartRoutes);
+app.use('/api/wishlist', wishlistRoutes);
 
 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://a54527177_db_user:<db_password>@cluster0.pbf7dfj.mongodb.net/';
+app.get('/api-docs-json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200).json(swaggerSpec);
+});
+
+
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://admin:askar1234Arshath@cluster0.pbf7dfj.mongodb.net/clothing?retryWrites=true&w=majority';
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('mongoDB Connected'))
