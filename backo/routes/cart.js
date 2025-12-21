@@ -1,29 +1,31 @@
 const express = require('express');
 const Cart = require('../models/cart');
 const Product = require('../models/product');
-const auth = require('../middleware/auth');
 
 const router = express.Router();
 
 /**
- * Add to cart
+ * Add to cart (CATEGORY STYLE)
+ * userId comes from request body
  */
-router.post('/add', auth, async (req, res) => {
+router.post('/add', async (req, res) => {
     try {
-        const { productId, quantity } = req.body;
-        console.log('USER =>', req.user);
+        const { userId, productId, quantity } = req.body;
 
+        if (!userId || !productId) {
+            return res.status(400).json({ error: 'userId and productId required' });
+        }
 
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({ error: 'Product not found' });
         }
 
-        let cart = await Cart.findOne({ user: req.user.id });
+        let cart = await Cart.findOne({ user: userId });
 
         if (!cart) {
             cart = await Cart.create({
-                user: req.user.id,
+                user: userId,
                 items: [{ product: productId, quantity: quantity || 1 }]
             });
         } else {
@@ -50,24 +52,31 @@ router.post('/add', auth, async (req, res) => {
 /**
  * Get cart
  */
-router.get('/', auth, async (req, res) => {
-    const cart = await Cart.findOne({ user: req.user.id })
+router.get('/:userId', async (req, res) => {
+    const cart = await Cart.findOne({ user: req.params.userId })
         .populate('items.product');
+
     res.json(cart || { items: [] });
 });
 
 /**
  * Remove item from cart
  */
-router.delete('/remove/:productId', auth, async (req, res) => {
-    const cart = await Cart.findOne({ user: req.user.id });
+router.delete('/remove', async (req, res) => {
+    const { userId, productId } = req.body;
+
+    if (!userId || !productId) {
+        return res.status(400).json({ error: 'userId and productId required' });
+    }
+
+    const cart = await Cart.findOne({ user: userId });
 
     if (!cart) {
         return res.status(404).json({ error: 'Cart not found' });
     }
 
     cart.items = cart.items.filter(
-        item => item.product.toString() !== req.params.productId
+        item => item.product.toString() !== productId
     );
 
     await cart.save();
