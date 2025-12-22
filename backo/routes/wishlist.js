@@ -1,68 +1,45 @@
 const express = require('express');
-const Wishlist = require('../models/wishlist');
+const User = require('../models/user');
 const Product = require('../models/product');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
 
 /**
- * Add to wishlist
+ * ADD / REMOVE WISHLIST
  */
-router.post('/add', auth, async (req, res) => {
-    try {
-        const { productId } = req.body;
+router.post('/toggle', auth, async (req, res) => {
+    const { productId } = req.body;
 
-        const product = await Product.findById(productId);
-        if (!product) {
-            return res.status(404).json({ error: 'Product not found' });
-        }
-
-        let wishlist = await Wishlist.findOne({ user: req.user.id });
-
-        if (!wishlist) {
-            wishlist = await Wishlist.create({
-                user: req.user.id,
-                products: [productId]
-            });
-        } else {
-            if (!wishlist.products.includes(productId)) {
-                wishlist.products.push(productId);
-                await wishlist.save();
-            }
-        }
-
-        res.json(wishlist);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Server error' });
-    }
-});
-
-/**
- * Get wishlist
- */
-router.get('/', auth, async (req, res) => {
-    const wishlist = await Wishlist.findOne({ user: req.user.id })
-        .populate('products');
-    res.json(wishlist || { products: [] });
-});
-
-/**
- * Remove from wishlist
- */
-router.delete('/remove/:productId', auth, async (req, res) => {
-    const wishlist = await Wishlist.findOne({ user: req.user.id });
-
-    if (!wishlist) {
-        return res.status(404).json({ error: 'Wishlist not found' });
+    const product = await Product.findById(productId);
+    if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
     }
 
-    wishlist.products = wishlist.products.filter(
-        id => id.toString() !== req.params.productId
+    const user = await User.findById(req.userId);
+
+    const index = user.wishlist.findIndex(
+        id => id.toString() === productId
     );
 
-    await wishlist.save();
-    res.json(wishlist);
+    if (index > -1) {
+        user.wishlist.splice(index, 1);
+    } else {
+        user.wishlist.push(productId);
+    }
+
+    await user.save();
+    res.json(user.wishlist);
+});
+
+/**
+ * GET WISHLIST
+ */
+router.get('/', auth, async (req, res) => {
+    const user = await User.findById(req.userId)
+        .populate('wishlist');
+
+    res.json(user.wishlist);
 });
 
 module.exports = router;
