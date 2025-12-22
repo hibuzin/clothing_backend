@@ -4,6 +4,7 @@ const Product = require('../models/product');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
+// clearing the push
 
 /**
  * ADD TO CART
