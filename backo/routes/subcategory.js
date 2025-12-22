@@ -6,7 +6,6 @@ const upload = require('../middleware/upload');
 
 const router = express.Router();
 
-// Create subcategory
 router.post('/', auth, upload.single('image'), async (req, res) => {
     try {
         const { categoryId, name } = req.body;
@@ -26,13 +25,25 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
     }
 });
 
-// Get subcategories by category
+// GET all subcategories
+router.get('/', async (req, res) => {
+    try {
+        const subcategories = await SubCategory.find()
+            .populate('category', 'name image');
+
+        res.json(subcategories);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+
 router.get('/:categoryId', async (req, res) => {
     const subs = await SubCategory.find({ category: req.params.categoryId });
     res.json(subs);
 });
 
-// Update subcategory (Admin)
 router.put('/:id', auth, upload.single('image'), async (req, res) => {
     try {
         const subcategory = await SubCategory.findById(req.params.id);
@@ -41,12 +52,10 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
             return res.status(404).json({ error: 'Subcategory not found' });
         }
 
-        // Update name
         if (req.body.name) {
             subcategory.name = req.body.name;
         }
 
-        // Update category (optional)
         if (req.body.categoryId) {
             const category = await Category.findById(req.body.categoryId);
             if (!category) {
@@ -55,7 +64,6 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
             subcategory.category = req.body.categoryId;
         }
 
-        // Update image
         if (req.file) {
             subcategory.image = req.file.path;
         }
@@ -73,7 +81,6 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
 });
 
 
-// Delete subcategory (Admin)
 router.delete('/:id', auth, async (req, res) => {
     try {
         const subcategory = await SubCategory.findById(req.params.id);
