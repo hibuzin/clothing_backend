@@ -37,7 +37,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
     }
 });
 
-// GET all products
+
 router.get('/', async (req, res) => {
     try {
         console.log('================ ALL PRODUCTS ================');
