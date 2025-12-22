@@ -37,6 +37,28 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
     }
 });
 
+// GET all products
+router.get('/', async (req, res) => {
+    try {
+        console.log('================ ALL PRODUCTS ================');
+        console.log('➡️ ENDPOINT: GET /api/products');
+
+        const products = await Product.find()
+            .populate('category', 'name image')
+            .populate('subcategory', 'name image');
+
+        console.log('📦 TOTAL PRODUCTS:', products.length);
+        console.log('================================================');
+
+        res.json(products);
+    } catch (err) {
+        console.error('🔥 FETCH ALL PRODUCTS ERROR');
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+
 /**
  * GET PRODUCTS BY SUBCATEGORY
  */
