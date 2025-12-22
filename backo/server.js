@@ -16,6 +16,14 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 
 
+
+
+
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
 app.use((req, res, next) => {
     console.log('------------------------------');
     console.log('📥 REQUEST');
@@ -29,12 +37,6 @@ app.use((req, res, next) => {
     console.log('------------------------------');
     next();
 });
-
-
-
-const app = express();
-app.use(cors());
-app.use(express.json());
 
 app.use((req, res, next) => {
     const oldJson = res.json;
