@@ -16,9 +16,40 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 
 
+app.use((req, res, next) => {
+    console.log('------------------------------');
+    console.log('📥 REQUEST');
+    console.log('METHOD:', req.method);
+    console.log('URL:', req.originalUrl);
+    console.log('HEADERS:', {
+        authorization: req.headers.authorization,
+        'content-type': req.headers['content-type']
+    });
+    console.log('BODY:', req.body);
+    console.log('------------------------------');
+    next();
+});
+
+
+
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+app.use((req, res, next) => {
+    const oldJson = res.json;
+
+    res.json = function (data) {
+        console.log('📤 RESPONSE');
+        console.log('STATUS:', res.statusCode);
+        console.log('BODY:', data);
+        console.log('------------------------------');
+        return oldJson.call(this, data);
+    };
+
+    next();
+});
+
 
 app.use('/api/auth', authRoutes);
 app.use('/uploads', express.static('uploads'));
