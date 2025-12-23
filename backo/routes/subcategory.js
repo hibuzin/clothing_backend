@@ -2,7 +2,8 @@ const express = require('express');
 const SubCategory = require('../models/subcategory');
 const Category = require('../models/category');
 const auth = require('../middleware/auth');
-const upload = require('../middleware/upload');
+const upload = require('../middleware/uploadCloudinary');
+
 
 
 const router = express.Router();

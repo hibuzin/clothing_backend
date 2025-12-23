@@ -13,6 +13,8 @@ router.post('/toggle', auth, async (req, res) => {
 
     const product = await Product.findById(productId);
     if (!product) {
+        console.log('❌ productId missing');
+
         return res.status(404).json({ error: 'Product not found' });
     }
 
@@ -24,11 +26,16 @@ router.post('/toggle', auth, async (req, res) => {
 
     if (index > -1) {
         user.wishlist.splice(index, 1);
+        console.log('🗑️ Removed from wishlist');
+
     } else {
         user.wishlist.push(productId);
+        console.log('❤️ Added to wishlist');
+
     }
 
     await user.save();
+    console.log('✅ Wishlist saved');
     res.json(user.wishlist);
 });
 

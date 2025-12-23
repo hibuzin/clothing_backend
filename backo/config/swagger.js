@@ -25,7 +25,7 @@ const options = {
         security: [{ bearerAuth: [] }],
     },
 
-    apis: ['./routes/*.js'], // 👈 VERY IMPORTANT
+    apis: ['./routes/*.js'], // 👈VERYIMPORTANT  
 };
 
 module.exports = swaggerJSDoc(options);
