@@ -10,15 +10,12 @@ const subCategoryRoutes = require('./routes/subcategory');
 const productRoutes = require('./routes/product');
 const cartRoutes = require('./routes/cart');
 const wishlistRoutes = require('./routes/wishlist');
+const orderRoutes = require('./routes/order');
+
 
 
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
-
-
-
-
-
 
 const app = express();
 app.use(cors());
@@ -60,11 +57,10 @@ app.use('/api/subcategories', require('./routes/subcategory'), subCategoryRoutes
 app.use('/api/products', require('./routes/product'));
 app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
-
+app.use('/api/orders', orderRoutes);
 
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
 
 app.get('/api-docs-json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');

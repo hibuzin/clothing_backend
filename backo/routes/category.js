@@ -3,9 +3,11 @@ const Category = require('../models/category');
 const auth = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
+
 const router = express.Router();
 
-// Create category (Admin)
+
+
 router.post('/', auth, upload.single('image'), async (req, res) => {
     try {
         const { name } = req.body;
@@ -23,13 +25,11 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
     }
 });
 
-// Get all categories (Public)
 router.get('/', async (req, res) => {
     const categories = await Category.find();
     res.json(categories);
 });
 
-// Update category (Admin)
 router.put('/:id', auth, upload.single('image'), async (req, res) => {
     try {
         const category = await Category.findById(req.params.id);
@@ -38,12 +38,10 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
             return res.status(404).json({ error: 'Category not found' });
         }
 
-        // Update name if provided
         if (req.body.name) {
             category.name = req.body.name;
         }
 
-        // Update image if provided
         if (req.file) {
             category.image = req.file.path;
         }
@@ -61,7 +59,6 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
 });
 
 
-// Delete category (Admin)
 router.delete('/:id', auth, async (req, res) => {
     try {
         const category = await Category.findById(req.params.id);
