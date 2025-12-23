@@ -88,4 +88,42 @@ router.get('/:id', auth, async (req, res) => {
     res.json(order);
 });
 
+
+/**
+ * CANCEL ORDER
+ */
+router.put('/:orderId/cancel', auth, async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.orderId);
+
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+
+        // Ensure order belongs to user
+        if (order.user.toString() !== req.userId) {
+            return res.status(403).json({ error: 'Not allowed to cancel this order' });
+        }
+
+        // Only PLACED orders can be cancelled
+        if (order.status !== 'PLACED') {
+            return res.status(400).json({
+                error: `Order cannot be cancelled when status is ${order.status}`
+            });
+        }
+
+        order.status = 'CANCELLED';
+        await order.save();
+
+        res.json({
+            message: 'Order cancelled successfully',
+            order
+        });
+
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+
 module.exports = router;
