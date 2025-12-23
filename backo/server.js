@@ -51,7 +51,6 @@ app.use((req, res, next) => {
 
 
 app.use('/api/auth', authRoutes);
-app.use('/uploads', express.static('uploads'));
 app.use('/api/categories', require('./routes/category'), categoryRoutes);
 app.use('/api/subcategories', require('./routes/subcategory'), subCategoryRoutes);
 app.use('/api/products', require('./routes/product'));
