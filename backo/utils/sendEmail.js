@@ -1,18 +1,12 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 module.exports = async function sendEmail(to, subject, text) {
-    await transporter.sendMail({
-        from: `"Clothing App" <${process.env.EMAIL_USER}>`,
+    await resend.emails.send({
+        from: process.env.FROM_EMAIL,
         to,
         subject,
-        text
+        html: `<p>${text}</p>`
     });
 };
