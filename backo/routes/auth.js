@@ -2,6 +2,8 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const auth = require('../middleware/auth');
+const sendEmail = require('../utils/sendEmail');
+
 
 const router = express.Router();
 
@@ -9,20 +11,42 @@ const router = express.Router();
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        if (!email || !password) return res.status(400).json({ error: 'Please provide email and password' });
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Please provide email and password' });
+        }
 
         const user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ error: 'Invalid credentials' });
+        if (!user) {
+            return res.status(400).json({ error: 'Invalid credentials' });
+        }
 
         const isMatch = await user.comparePassword(password);
-        if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
+        if (!isMatch) {
+            return res.status(400).json({ error: 'Invalid credentials' });
+        }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secretkey', { expiresIn: process.env.JWT_EXPIRES_IN || '1d' });
+
+        if (!user.isVerified) {
+            return res.status(403).json({
+                error: 'Please verify your email before logging in'
+            });
+        }
+
+        const token = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET || 'secretkey',
+            { expiresIn: process.env.JWT_EXPIRES_IN || '1d' }
+        );
 
         res.json({
             token,
-            user: { id: user._id, name: user.name, email: user.email }
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email
+            }
         });
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Server error' });
@@ -34,26 +58,72 @@ router.post('/login', async (req, res) => {
 router.post('/register', async (req, res) => {
     try {
         const { name, email, password } = req.body;
-        if (!name || !email || !password) return res.status(400).json({ error: 'Please provide name, email and password' });
 
-        const existing = await User.findOne({ email });
-        if (existing) return res.status(400).json({ error: 'Email already registered' });
+        if (!name || !email || !password) {
+            return res.status(400).json({
+                error: 'Please provide name, email and password'
+            });
+        }
 
-        const user = new User({ name, email, password });
-        await user.save();
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Email already registered' });
+        }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secretkey', { expiresIn: process.env.JWT_EXPIRES_IN || '1d' });
+        // Generate OTP
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        const otpExpiresAt = Date.now() + 10 * 60 * 1000;
 
-        res.json({
-            token,
-            user: { id: user._id, name: user.name, email: user.email }
+        await User.create({
+            name,
+            email,
+            password,
+            otp,
+            otpExpiresAt,
+            isVerified: false
         });
+
+        await sendEmail(
+            email,
+            'Verify your email',
+            `Your OTP is ${otp}. It is valid for 10 minutes.`
+        );
+
+        res.status(201).json({
+            message: 'OTP sent to email. Please verify to continue.'
+        });
+
     } catch (err) {
-        if (err.code === 11000) return res.status(400).json({ error: 'Email already registered' });
         console.error(err);
         res.status(500).json({ error: 'Server error' });
     }
 });
+
+router.post('/verify-otp', async (req, res) => {
+    const { email, otp } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user.isVerified) {
+        return res.status(400).json({ error: 'User already verified' });
+    }
+
+    if (user.otp !== otp || user.otpExpiresAt < Date.now()) {
+        return res.status(400).json({ error: 'Invalid or expired OTP' });
+    }
+
+    user.isVerified = true;
+    user.otp = undefined;
+    user.otpExpiresAt = undefined;
+    await user.save();
+
+    res.json({ message: 'Email verified successfully' });
+});
+
 
 
 router.get('/me', auth, async (req, res) => {
