@@ -7,6 +7,14 @@ const UserSchema = new mongoose.Schema({
     password: { type: String, required: true },
     image: { type: String },
 
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+
+    otp: String,
+    otpExpiresAt: Date,
+
     wishlist: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Product'
