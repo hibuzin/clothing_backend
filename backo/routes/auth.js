@@ -2,7 +2,6 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const auth = require('../middleware/auth');
-const sendEmail = require('../utils/sendEmail');
 
 
 const router = express.Router();
@@ -70,9 +69,9 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ error: 'Email already registered' });
         }
 
-        // Generate OTP
-        const otp = Math.floor(100000 + Math.random() * 900000);
-        const otpExpiresAt = Date.now() + 10 * 60 * 1000;
+        // ✅ Generate OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpiresAt = Date.now() + 10 * 60 * 1000; // 10 mins
 
         await User.create({
             name,
@@ -83,14 +82,11 @@ router.post('/register', async (req, res) => {
             isVerified: false
         });
 
-        await sendEmail(
-            email,
-            'Verify your email',
-            `Your OTP is ${otp}. It is valid for 10 minutes.`
-        );
-
+        // ✅ DEV MODE RESPONSE
         res.status(201).json({
-            message: 'OTP sent to email. Please verify to continue.'
+            message: 'OTP generated (DEV MODE)',
+            otp,
+            expiresIn: '10 minutes'
         });
 
     } catch (err) {
@@ -99,8 +95,16 @@ router.post('/register', async (req, res) => {
     }
 });
 
+/*
+verify OTP and activate user account
+*/
+
 router.post('/verify-otp', async (req, res) => {
     const { email, otp } = req.body;
+
+    if (!email || !otp) {
+        return res.status(400).json({ error: 'Email and OTP required' });
+    }
 
     const user = await User.findOne({ email });
 
@@ -112,7 +116,10 @@ router.post('/verify-otp', async (req, res) => {
         return res.status(400).json({ error: 'User already verified' });
     }
 
-    if (user.otp !== otp || user.otpExpiresAt < Date.now()) {
+    if (
+        user.otp !== otp ||
+        user.otpExpiresAt < Date.now()
+    ) {
         return res.status(400).json({ error: 'Invalid or expired OTP' });
     }
 
