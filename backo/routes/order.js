@@ -5,9 +5,40 @@ const Order = require('../models/order');
 
 const router = express.Router();
 
+
 /**
- * PLACE ORDER
+ * @swagger
+ * tags:
+ *   name: Orders
+ *   description: User order management
  */
+
+/**
+ * @swagger
+ * /api/orders:
+ *   post:
+ *     summary: Place an order
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               address:
+ *                 type: object
+ *                 example: { street: "123 Main St", city: "City", pincode: "600001", phone: "9876543210", name: "John" }
+ *               paymentMethod:
+ *                 type: string
+ *                 example: COD
+ *     responses:
+ *       200:
+ *         description: Order placed successfully
+ */
+
 router.post('/', auth, async (req, res) => {
     try {
         console.log('🛒 PLACE ORDER REQUEST');
@@ -62,9 +93,20 @@ router.post('/', auth, async (req, res) => {
     }
 });
 
+
 /**
- * GET MY ORDERS
+ * @swagger
+ * /api/orders/my:
+ *   get:
+ *     summary: Get my orders
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of user orders
  */
+
 router.get('/my', auth, async (req, res) => {
     const orders = await Order.find({ user: req.userId })
         .sort({ createdAt: -1 });
@@ -72,9 +114,29 @@ router.get('/my', auth, async (req, res) => {
     res.json(orders);
 });
 
+
 /**
- * GET SINGLE ORDER
+ * @swagger
+ * /api/orders/{id}:
+ *   get:
+ *     summary: Get single order by ID
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Single order details
+ *       404:
+ *         description: Order not found
  */
+
+
 router.get('/:id', auth, async (req, res) => {
     const order = await Order.findOne({
         _id: req.params.id,
@@ -88,10 +150,31 @@ router.get('/:id', auth, async (req, res) => {
     res.json(order);
 });
 
-
 /**
- * CANCEL ORDER
+ * @swagger
+ * /api/orders/{orderId}/cancel:
+ *   put:
+ *     summary: Cancel an order
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Order cancelled successfully
+ *       400:
+ *         description: Order cannot be cancelled
+ *       404:
+ *         description: Order not found
+ *       403:
+ *         description: Not allowed to cancel this order
  */
+
 router.put('/:orderId/cancel', auth, async (req, res) => {
     try {
         const order = await Order.findById(req.params.orderId);
@@ -124,6 +207,26 @@ router.put('/:orderId/cancel', auth, async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 });
+
+
+router.put('/:orderId/status', auth, async (req, res) => {
+    try {
+        const { status } = req.body;
+        const order = await Order.findById(req.params.orderId);
+        if (!order) return res.status(404).json({ error: 'Order not found' });
+
+        const allowedStatuses = ['PLACED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'RETURNED'];
+        if (!allowedStatuses.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+
+        order.status = status;
+        await order.save();
+
+        res.json({ message: 'Order status updated', order });
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 
 
 module.exports = router;

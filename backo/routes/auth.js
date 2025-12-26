@@ -6,6 +6,34 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Login user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: testi@yopmail.com
+ *               password:
+ *                 type: string
+ *                 example: 123456
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       401:
+ *         description: Invalid credentials
+ */
 
 router.post('/login', async (req, res) => {
     try {
@@ -84,7 +112,7 @@ router.post('/register', async (req, res) => {
 
         // ✅ DEV MODE RESPONSE
         res.status(201).json({
-            message: 'OTP generated (DEV MODE)',
+            message: 'OTP generated',
             otp,
             expiresIn: '10 minutes'
         });

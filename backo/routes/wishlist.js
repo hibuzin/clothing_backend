@@ -6,8 +6,37 @@ const auth = require('../middleware/auth');
 const router = express.Router();
 
 /**
- * ADD / REMOVE WISHLIST
+ * @swagger
+ * tags:
+ *   name: Wishlist
+ *   description: User wishlist management
  */
+
+/**
+ * @swagger
+ * /api/wishlist/toggle:
+ *   post:
+ *     summary: Add or remove a product from wishlist
+ *     tags: [Wishlist]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               productId:
+ *                 type: string
+ *                 example: "64a0f4b2c9a1f1a1b1c1d1e2"
+ *     responses:
+ *       200:
+ *         description: Updated wishlist
+ *       404:
+ *         description: Product not found
+ */
+
 router.post('/toggle', auth, async (req, res) => {
     const { productId } = req.body;
 
@@ -39,9 +68,21 @@ router.post('/toggle', auth, async (req, res) => {
     res.json(user.wishlist);
 });
 
+
 /**
- * GET WISHLIST
+ * @swagger
+ * /api/wishlist:
+ *   get:
+ *     summary: Get user wishlist
+ *     tags: [Wishlist]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User wishlist items
  */
+
+
 router.get('/', auth, async (req, res) => {
     const user = await User.findById(req.userId)
         .populate('wishlist');
