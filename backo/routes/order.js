@@ -6,38 +6,7 @@ const Order = require('../models/order');
 const router = express.Router();
 
 
-/**
- * @swagger
- * tags:
- *   name: Orders
- *   description: User order management
- */
 
-/**
- * @swagger
- * /api/orders:
- *   post:
- *     summary: Place an order
- *     tags: [Orders]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               address:
- *                 type: object
- *                 example: { street: "123 Main St", city: "City", pincode: "600001", phone: "9876543210", name: "John" }
- *               paymentMethod:
- *                 type: string
- *                 example: COD
- *     responses:
- *       200:
- *         description: Order placed successfully
- */
 
 router.post('/', auth, async (req, res) => {
     try {
@@ -94,18 +63,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 
-/**
- * @swagger
- * /api/orders/my:
- *   get:
- *     summary: Get my orders
- *     tags: [Orders]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of user orders
- */
+
 
 router.get('/my', auth, async (req, res) => {
     const orders = await Order.find({ user: req.userId })
@@ -115,26 +73,7 @@ router.get('/my', auth, async (req, res) => {
 });
 
 
-/**
- * @swagger
- * /api/orders/{id}:
- *   get:
- *     summary: Get single order by ID
- *     tags: [Orders]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Single order details
- *       404:
- *         description: Order not found
- */
+
 
 
 router.get('/:id', auth, async (req, res) => {
@@ -150,30 +89,6 @@ router.get('/:id', auth, async (req, res) => {
     res.json(order);
 });
 
-/**
- * @swagger
- * /api/orders/{orderId}/cancel:
- *   put:
- *     summary: Cancel an order
- *     tags: [Orders]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: orderId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Order cancelled successfully
- *       400:
- *         description: Order cannot be cancelled
- *       404:
- *         description: Order not found
- *       403:
- *         description: Not allowed to cancel this order
- */
 
 router.put('/:orderId/cancel', auth, async (req, res) => {
     try {

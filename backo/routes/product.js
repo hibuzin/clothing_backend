@@ -7,47 +7,7 @@ const upload = require('../middleware/uploadCloudinary');
 
 const router = express.Router();
 
-/**
- * @swagger
- * tags:
- *   name: Products
- *   description: Product management
- */
 
-/**
- * @swagger
- * /api/products:
- *   post:
- *     summary: Create a product
- *     tags: [Products]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               category:
- *                 type: string
- *               subcategory:
- *                 type: string
- *               price:
- *                 type: number
- *               stock:
- *                 type: number
- *               description:
- *                 type: string
- *               image:
- *                 type: string
- *                 format: binary
- *     responses:
- *       200:
- *         description: Product created
- */
 
 
 router.post('/', auth, upload.single('image'), async (req, res) => {
@@ -79,16 +39,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /api/products:
- *   get:
- *     summary: Get all products
- *     tags: [Products]
- *     responses:
- *       200:
- *         description: List of all products
- */
+
 
 
 router.get('/', async (req, res) => {
@@ -113,22 +64,6 @@ router.get('/', async (req, res) => {
 
 
 
-/**
- * @swagger
- * /api/products/subcategory/{subId}:
- *   get:
- *     summary: Get products by subcategory
- *     tags: [Products]
- *     parameters:
- *       - in: path
- *         name: subId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: List of products in the subcategory
- */
 
 
 router.get('/subcategory/:subId', async (req, res) => {
@@ -150,24 +85,7 @@ router.get('/subcategory/:subId', async (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /api/products/{id}:
- *   get:
- *     summary: Get product by ID
- *     tags: [Products]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Product details
- *       404:
- *         description: Product not found
- */
+
 
 router.get('/:id', async (req, res) => {
     try {
@@ -195,47 +113,6 @@ router.get('/:id', async (req, res) => {
 });
 
 
-/**
- * @swagger
- * /api/products/{id}:
- *   put:
- *     summary: Update a product
- *     tags: [Products]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               category:
- *                 type: string
- *               subcategory:
- *                 type: string
- *               price:
- *                 type: number
- *               stock:
- *                 type: number
- *               description:
- *                 type: string
- *               image:
- *                 type: string
- *                 format: binary
- *     responses:
- *       200:
- *         description: Product updated
- *       404:
- *         description: Product not found
- */
 
 router.put('/:id', auth, upload.single('image'), async (req, res) => {
     try {
@@ -278,26 +155,6 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
 });
 
 
-/**
- * @swagger
- * /api/products/{id}:
- *   delete:
- *     summary: Delete a product
- *     tags: [Products]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Product deleted
- *       404:
- *         description: Product not found
- */
 
 router.delete('/:id', auth, async (req, res) => {
     try {
@@ -320,7 +177,7 @@ router.delete('/:id', auth, async (req, res) => {
 
         res.json({ message: 'Product deleted successfully' });
     } catch (err) {
-        console.error('🔥 DELETE PRODUCT ERROR');
+        console.error('DELETE PRODUCT ERROR');
         console.error(err);
         res.status(500).json({ error: 'Server error' });
     }

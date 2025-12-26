@@ -6,39 +6,6 @@ const upload = require('../middleware/uploadCloudinary');
 
 const router = express.Router();
 
-/**
- * @swagger
- * tags:
- *   name: Subcategories
- *   description: Subcategory management
- */
-
-/**
- * @swagger
- * /api/subcategories:
- *   post:
- *     summary: Create a subcategory
- *     tags: [Subcategories]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               categoryId:
- *                 type: string
- *               name:
- *                 type: string
- *               image:
- *                 type: string
- *                 format: binary
- *     responses:
- *       200:
- *         description: Subcategory created
- */
 
 router.post('/', auth, upload.single('image'), async (req, res) => {
     try {
@@ -59,16 +26,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /api/subcategories:
- *   get:
- *     summary: Get all subcategories
- *     tags: [Subcategories]
- *     responses:
- *       200:
- *         description: List of subcategories
- */
+
 
 // GET all subcategories
 router.get('/', async (req, res) => {
@@ -83,22 +41,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /api/subcategories/{categoryId}:
- *   get:
- *     summary: Get subcategories by category ID
- *     tags: [Subcategories]
- *     parameters:
- *       - in: path
- *         name: categoryId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: List of subcategories for a category
- */
+
 
 
 router.get('/:categoryId', async (req, res) => {
@@ -106,35 +49,7 @@ router.get('/:categoryId', async (req, res) => {
     res.json(subs);
 });
 
-/**
- * @swagger
- * /api/subcategories/{id}:
- *   put:
- *     summary: Update a subcategory
- *     tags: [Subcategories]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *     requestBody:
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               categoryId:
- *                 type: string
- *               image:
- *                 type: string
- *                 format: binary
- *     responses:
- *       200:
- *         description: Subcategory updated
- */
+
 
 router.put('/:id', auth, upload.single('image'), async (req, res) => {
     try {
@@ -173,22 +88,6 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
 });
 
 
-/**
- * @swagger
- * /api/subcategories/{id}:
- *   delete:
- *     summary: Delete a subcategory
- *     tags: [Subcategories]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *     responses:
- *       200:
- *         description: Subcategory deleted
- */
 
 
 router.delete('/:id', auth, async (req, res) => {
