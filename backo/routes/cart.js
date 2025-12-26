@@ -4,11 +4,42 @@ const Product = require('../models/product');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
-// clearing the push
+
 
 /**
- * ADD TO CART
+ * @swagger
+ * tags:
+ *   name: Cart
+ *   description: User cart management
  */
+
+/**
+ * @swagger
+ * /api/cart/add:
+ *   post:
+ *     summary: Add product to cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               productId:
+ *                 type: string
+ *               quantity:
+ *                 type: integer
+ *                 default: 1
+ *     responses:
+ *       200:
+ *         description: Product added to cart
+ */
+
+
+
 router.post('/add', auth, async (req, res) => {
     try {
         const { productId, quantity = 1 } = req.body;
@@ -46,9 +77,20 @@ router.post('/add', auth, async (req, res) => {
     }
 });
 
+
 /**
- * GET USER CART
+ * @swagger
+ * /api/cart:
+ *   get:
+ *     summary: Get user cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User cart
  */
+
 router.get('/', auth, async (req, res) => {
     const cart = await Cart.findOne({ user: req.userId })
         .populate('items.product');
@@ -56,9 +98,32 @@ router.get('/', auth, async (req, res) => {
     res.json(cart || { items: [] });
 });
 
+
 /**
- * UPDATE QUANTITY
+ * @swagger
+ * /api/cart/update:
+ *   put:
+ *     summary: Update product quantity in cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               productId:
+ *                 type: string
+ *               quantity:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Cart updated
  */
+
+
 router.put('/update', auth, async (req, res) => {
     const { productId, quantity } = req.body;
 
@@ -78,8 +143,24 @@ router.put('/update', auth, async (req, res) => {
 });
 
 /**
- * REMOVE ITEM
+ * @swagger
+ * /api/cart/remove/{productId}:
+ *   delete:
+ *     summary: Remove product from cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Product removed from cart
  */
+
 router.delete('/remove/:productId', auth, async (req, res) => {
     const cart = await Cart.findOne({ user: req.userId });
 
