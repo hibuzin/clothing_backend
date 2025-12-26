@@ -14,8 +14,6 @@ const orderRoutes = require('./routes/order');
 
 
 
-const swaggerUi = require('swagger-ui-express');
-const swaggerSpec = require('./config/swagger');
 
 const app = express();
 app.use(cors());
@@ -59,7 +57,6 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/orders', orderRoutes);
 
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get('/api-docs-json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
