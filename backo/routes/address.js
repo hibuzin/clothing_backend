@@ -44,6 +44,16 @@ router.get('/', auth, async (req, res) => {
 // ✅ UPDATE ADDRESS
 router.put('/:addressId', auth, async (req, res) => {
     try {
+        const { isDefault } = req.body;
+
+        // ✅ If making this address default, unset others
+        if (isDefault === true) {
+            await Address.updateMany(
+                { user: req.user.id, isDefault: true },
+                { isDefault: false }
+            );
+        }
+
         const address = await Address.findOneAndUpdate(
             { _id: req.params.addressId, user: req.user.id },
             req.body,
@@ -55,10 +65,12 @@ router.put('/:addressId', auth, async (req, res) => {
         }
 
         res.json(address);
+
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
+
 
 
 // ✅ DELETE ADDRESS

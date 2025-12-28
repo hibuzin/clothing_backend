@@ -38,9 +38,11 @@ router.post('/login', async (req, res) => {
             { expiresIn: process.env.JWT_EXPIRES_IN || '1d' }
         );
 
-        const addresses = await address
-            .find({ user: user._id })
-            .sort({ isDefault: -1, createdAt: -1 });
+        const defaultAddress = await Address.findOne({
+            user: user._id,
+            isDefault: true
+        });
+
 
         res.json({
             token,
