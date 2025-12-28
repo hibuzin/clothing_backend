@@ -38,6 +38,10 @@ router.post('/login', async (req, res) => {
             { expiresIn: process.env.JWT_EXPIRES_IN || '1d' }
         );
 
+        const addresses = await address
+            .find({ user: user._id })
+            .sort({ isDefault: -1, createdAt: -1 });
+
         res.json({
             token,
             user: {
