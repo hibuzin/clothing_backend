@@ -15,8 +15,6 @@ const addressRoutes = require('./routes/address');
 
 
 
-
-
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -57,7 +55,7 @@ app.use('/api/products', require('./routes/product'));
 app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/orders', orderRoutes);
-app.use('/api/addresses', addressRoutes);
+const addressRoutes = require('./routes/address');
 
 
 app.get('/api-docs-json', (req, res) => {
