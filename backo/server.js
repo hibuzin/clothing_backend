@@ -55,7 +55,7 @@ app.use('/api/products', require('./routes/product'));
 app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/orders', orderRoutes);
-const addressRoutes = require('./routes/address');
+app.use('/api/address', addressRoutes);
 
 
 app.get('/api-docs-json', (req, res) => {
