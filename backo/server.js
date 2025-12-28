@@ -57,7 +57,7 @@ app.use('/api/products', require('./routes/product'));
 app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/orders', orderRoutes);
-app.use('/api/address', addressRoutes);
+app.use('/api/addresses', addressRoutes);
 
 
 app.get('/api-docs-json', (req, res) => {
