@@ -6,8 +6,6 @@ const address = require('../models/address');
 
 const router = express.Router();
 
-
-
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -38,21 +36,18 @@ router.post('/login', async (req, res) => {
             { expiresIn: process.env.JWT_EXPIRES_IN || '1d' }
         );
 
-        const defaultAddress = await Address.findOne({
-            user: user._id,
-            isDefault: true
-        });
+     const addresses = await Address.find({ user: user._id });
 
-
-        res.json({
-            token,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email
-            },
-            addresses
-        });
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone
+      },
+      addresses
+    });
 
     } catch (err) {
         console.error(err);
