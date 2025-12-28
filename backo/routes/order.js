@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.post('/', auth, async (req, res) => {
     try {
-        console.log('🛒 PLACE ORDER REQUEST');
+        console.log('PLACE ORDER REQUEST');
 
         const { address, paymentMethod } = req.body;
 
@@ -18,7 +18,7 @@ router.post('/', auth, async (req, res) => {
             .populate('items.product');
 
         if (!cart || cart.items.length === 0) {
-            console.log('❌ Cart empty');
+            console.log('Cart empty');
             return res.status(400).json({ error: 'Cart is empty' });
         }
 
