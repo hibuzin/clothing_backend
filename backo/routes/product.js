@@ -3,12 +3,7 @@ const Product = require('../models/product');
 const auth = require('../middleware/auth');
 const upload = require('../middleware/uploadCloudinary');
 
-
-
 const router = express.Router();
-
-
-
 
 router.post('/', auth, upload.single('image'), async (req, res) => {
     try {
@@ -39,9 +34,6 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
     }
 });
 
-
-
-
 router.get('/', async (req, res) => {
     try {
         console.log('================ ALL PRODUCTS ================');
@@ -62,10 +54,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-
-
-
-
 router.get('/subcategory/:subId', async (req, res) => {
     try {
         console.log('================ PRODUCT LIST (SUBCATEGORY) ================');
@@ -84,8 +72,6 @@ router.get('/subcategory/:subId', async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 });
-
-
 
 router.get('/:id', async (req, res) => {
     try {
@@ -111,8 +97,6 @@ router.get('/:id', async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 });
-
-
 
 router.put('/:id', auth, upload.single('image'), async (req, res) => {
     try {
@@ -153,8 +137,6 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 });
-
-
 
 router.delete('/:id', auth, async (req, res) => {
     try {
