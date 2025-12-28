@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const auth = require('../middleware/auth');
 const address = require('../models/address');
+const address = require('../models/address');
+
 
 const router = express.Router();
 
@@ -36,18 +38,18 @@ router.post('/login', async (req, res) => {
             { expiresIn: process.env.JWT_EXPIRES_IN || '1d' }
         );
 
-     const addresses = await Address.find({ user: user._id });
+        const addresses = await Address.find({ user: user._id });
 
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone
-      },
-      addresses
-    });
+        res.json({
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone
+            },
+            addresses
+        });
 
     } catch (err) {
         console.error(err);
