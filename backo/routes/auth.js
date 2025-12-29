@@ -57,7 +57,7 @@ router.post('/login', async (req, res) => {
                 email: user.email,
                 phone: user.phone
             },
-            addresses
+            address
         });
 
     } catch (err) {
