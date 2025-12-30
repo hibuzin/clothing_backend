@@ -6,10 +6,6 @@ const auth = require('../middleware/auth');
 const router = express.Router();
 
 
-
-
-
-
 router.post('/add', auth, async (req, res) => {
     try {
         const { productId, quantity = 1 } = req.body;
