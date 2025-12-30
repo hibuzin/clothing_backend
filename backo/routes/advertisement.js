@@ -11,8 +11,7 @@ const router = express.Router();
 router.post(
   '/',
   auth,
-  upload.array('images', ),
-  async (req, res) => {
+  upload.array('images',), async (req, res) => {
     try {
       const { title, link, position } = req.body;
 
@@ -41,10 +40,10 @@ router.post(
  * GET ALL ACTIVE ADVERTISEMENTS
  */
 router.get('/', async (req, res) => {
-    const ads = await Advertisement.find({ isActive: true })
-        .sort({ position: 1 });
+  const ads = await Advertisement.find({ isActive: true })
+    .sort({ position: 1 });
 
-    res.json(ads);
+  res.json(ads);
 });
 
 /**
@@ -53,7 +52,7 @@ router.get('/', async (req, res) => {
 router.put(
   '/:id',
   auth,
-  upload.array('images', 3),
+  upload.array('images',),
   async (req, res) => {
     const updateData = req.body;
 
@@ -75,8 +74,8 @@ router.put(
  * DELETE ADVERTISEMENT
  */
 router.delete('/:id', auth, async (req, res) => {
-    await Advertisement.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Advertisement deleted' });
+  await Advertisement.findByIdAndDelete(req.params.id);
+  res.json({ message: 'Advertisement deleted' });
 });
 
 module.exports = router;
