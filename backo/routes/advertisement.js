@@ -11,7 +11,7 @@ const router = express.Router();
 router.post(
   '/',
   auth,
-  upload.array('images', 3),
+  upload.array('images', ),
   async (req, res) => {
     try {
       const { title, link, position } = req.body;
