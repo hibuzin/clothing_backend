@@ -8,25 +8,37 @@ const router = express.Router();
 /**
  * CREATE ADVERTISEMENT (Admin)
  */
-router.post('/', auth, upload.single('image'), async (req, res) => {
+router.post(
+  '/',
+  auth,
+  upload.array('images', 3),
+  async (req, res) => {
     try {
-        const { title, link, position } = req.body;
+      const { title, link, position } = req.body;
 
-        const ad = await Advertisement.create({
-            title,
-            link,
-            position,
-            image: req.file.path
-        });
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ error: 'Images required' });
+      }
 
-        res.status(201).json(ad);
+      const imageUrls = req.files.map(file => file.path);
+
+      const ad = await Advertisement.create({
+        title,
+        link,
+        position,
+        images: imageUrls
+      });
+
+      res.status(201).json(ad);
     } catch (err) {
-        res.status(500).json({ error: 'Server error' });
+      console.error(err);
+      res.status(500).json({ error: 'Server error' });
     }
-});
+  }
+);
 
 /**
- * GET ALL ACTIVE ADVERTISEMENTS (User App)
+ * GET ALL ACTIVE ADVERTISEMENTS
  */
 router.get('/', async (req, res) => {
     const ads = await Advertisement.find({ isActive: true })
@@ -36,26 +48,31 @@ router.get('/', async (req, res) => {
 });
 
 /**
- * UPDATE ADVERTISEMENT (Admin)
+ * UPDATE ADVERTISEMENT
  */
-router.put('/:id', auth, upload.single('image'), async (req, res) => {
+router.put(
+  '/:id',
+  auth,
+  upload.array('images', 3),
+  async (req, res) => {
     const updateData = req.body;
 
-    if (req.file) {
-        updateData.image = req.file.path;
+    if (req.files && req.files.length > 0) {
+      updateData.images = req.files.map(file => file.path);
     }
 
     const ad = await Advertisement.findByIdAndUpdate(
-        req.params.id,
-        updateData,
-        { new: true }
+      req.params.id,
+      updateData,
+      { new: true }
     );
 
     res.json(ad);
-});
+  }
+);
 
 /**
- * DELETE ADVERTISEMENT (Admin)
+ * DELETE ADVERTISEMENT
  */
 router.delete('/:id', auth, async (req, res) => {
     await Advertisement.findByIdAndDelete(req.params.id);
