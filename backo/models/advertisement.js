@@ -5,10 +5,12 @@ const AdvertisementSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    image: {
-        type: String,
-        required: true
-    },
+    images: [
+        {
+            type: String,
+            required: true
+        }
+    ],
     link: {
         type: String, // product / category / external link
         default: null
