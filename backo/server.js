@@ -12,6 +12,7 @@ const cartRoutes = require('./routes/cart');
 const wishlistRoutes = require('./routes/wishlist');
 const orderRoutes = require('./routes/order');
 const addressRoutes = require('./routes/address');
+const advertisementRoutes = require('./routes/advertisement');
 
 
 
@@ -56,6 +57,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/address', addressRoutes);
+app.use('/api/advertisements', advertisementRoutes);
 
 
 app.get('/api-docs-json', (req, res) => {

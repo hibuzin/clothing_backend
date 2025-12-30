@@ -109,6 +109,14 @@ router.post('/register', async (req, res) => {
     }
 });
 
+
+router.post('/logout', auth, (req, res) => {
+    return res.json({
+        message: 'Logout successful'
+    });
+});
+
+
 /*
 verify OTP and activate user account
 */
