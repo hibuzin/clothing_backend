@@ -13,7 +13,7 @@ const wishlistRoutes = require('./routes/wishlist');
 const orderRoutes = require('./routes/order');
 const addressRoutes = require('./routes/address');
 const advertisementRoutes = require('./routes/advertisement');
-
+const reviewRoutes = require('./routes/review');
 
 
 const app = express();
@@ -58,6 +58,8 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/address', addressRoutes);
 app.use('/api/advertisements', advertisementRoutes);
+app.use('/api/review', reviewRoutes);
+
 
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://admin:askar1234Arshath@cluster0.pbf7dfj.mongodb.net/clothing?retryWrites=true&w=majority';
