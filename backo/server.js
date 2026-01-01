@@ -60,12 +60,6 @@ app.use('/api/address', addressRoutes);
 app.use('/api/advertisements', advertisementRoutes);
 
 
-app.get('/api-docs-json', (req, res) => {
-    res.setHeader('Content-Type', 'application/json');
-    res.status(200).json(swaggerSpec);
-});
-
-
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://admin:askar1234Arshath@cluster0.pbf7dfj.mongodb.net/clothing?retryWrites=true&w=majority';
 
 mongoose.connect(MONGO_URI)

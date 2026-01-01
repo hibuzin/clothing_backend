@@ -46,4 +46,41 @@ router.get('/', auth, async (req, res) => {
     res.json(user.wishlist);
 });
 
+/**
+ * REMOVE FROM WISHLIST
+ * DELETE /api/wishlist/:productId
+ */
+router.delete('/:productId', auth, async (req, res) => {
+    try {
+        const { productId } = req.params;
+
+        const user = await User.findById(req.userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const index = user.wishlist.findIndex(
+            id => id.toString() === productId
+        );
+
+        if (index === -1) {
+            return res.status(400).json({ error: 'Product not in wishlist' });
+        }
+
+        user.wishlist.splice(index, 1);
+        await user.save();
+
+        console.log('🗑️ Wishlist item deleted');
+
+        res.json({
+            message: 'Removed from wishlist',
+            wishlist: user.wishlist
+        });
+    } catch (error) {
+        console.error(' Wishlist delete error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+
 module.exports = router;

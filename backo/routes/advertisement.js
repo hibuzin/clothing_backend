@@ -52,7 +52,7 @@ router.get('/', async (req, res) => {
 router.put(
   '/:id',
   auth,
-  upload.array('images',),
+  upload.array('images',h),
   async (req, res) => {
     const updateData = req.body;
 
