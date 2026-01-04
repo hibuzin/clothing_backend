@@ -5,9 +5,6 @@ const Order = require('../models/order');
 
 const router = express.Router();
 
-
-
-
 router.post('/', auth, async (req, res) => {
     try {
         console.log('PLACE ORDER REQUEST');
@@ -62,6 +59,18 @@ router.post('/', auth, async (req, res) => {
     }
 });
 
+// GET ALL ORDERS (TEMP – without admin role)
+router.get('/', auth, async (req, res) => {
+    try {
+        const orders = await Order.find()
+            .populate('user', 'name email') // optional
+            .sort({ createdAt: -1 });
+
+        res.json(orders);
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
 
 
 
