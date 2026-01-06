@@ -55,7 +55,7 @@ app.use('/api/subcategories', require('./routes/subcategory'), subCategoryRoutes
 app.use('/api/products', require('./routes/product'));
 app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
-app.use('/api/order', orderRoutes);
+app.use('/api/orders', orderRoutes);
 app.use('/api/address', addressRoutes);
 app.use('/api/advertisements', advertisementRoutes);
 app.use('/api/review', reviewRoutes);
