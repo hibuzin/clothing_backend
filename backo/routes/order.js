@@ -16,27 +16,32 @@ router.post('/', auth, async (req, res) => {
             .populate('items.product');
 
         if (!cart || cart.items.length === 0) {
-            console.log('Cart empty');
             return res.status(400).json({ error: 'Cart is empty' });
+        }
+
+        const validItems = cart.items.filter(item =>
+            item.product && item.product.price != null
+        );
+
+        if (validItems.length === 0) {
+            return res.status(400).json({ error: 'No valid products in cart' });
         }
 
         let totalAmount = 0;
 
-        const orderItems = cart.items.map(item => {
-    if (!item.product || item.product.price == null) {
-        throw new Error('Invalid product in cart');
-    }
+        const orderItems = validItems.map(item => {
+            totalAmount += item.product.price * item.quantity;
 
-    totalAmount += item.product.price * item.quantity;
+            return {
+                product: item.product._id,
+                name: item.product.name,
+                price: item.product.price,
+                quantity: item.quantity,
+                image: item.product.image
+            };
+        });
 
-    return {
-        product: item.product._id,
-        name: item.product.name,
-        price: item.product.price,
-        quantity: item.quantity,
-        image: item.product.image
-    };
-});
+
 
 
 
