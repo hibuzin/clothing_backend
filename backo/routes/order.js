@@ -8,6 +8,7 @@ const router = express.Router();
 router.post('/', auth, async (req, res) => {
     try {
         console.log('PLACE ORDER REQUEST');
+        console.log('USER ID:', req.userId);
 
         const { address, paymentMethod } = req.body;
 
@@ -22,16 +23,22 @@ router.post('/', auth, async (req, res) => {
         let totalAmount = 0;
 
         const orderItems = cart.items.map(item => {
-            totalAmount += item.product.price * item.quantity;
+    if (!item.product || item.product.price == null) {
+        throw new Error('Invalid product in cart');
+    }
 
-            return {
-                product: item.product._id,
-                name: item.product.name,
-                price: item.product.price,
-                quantity: item.quantity,
-                image: item.product.image
-            };
-        });
+    totalAmount += item.product.price * item.quantity;
+
+    return {
+        product: item.product._id,
+        name: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+        image: item.product.image
+    };
+});
+
+
 
         const order = await Order.create({
             user: req.userId,

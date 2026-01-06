@@ -11,13 +11,14 @@ const OrderSchema = new mongoose.Schema({
         {
             product: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Product'
+                ref: 'Product',
+                required: true
             },
-            name: String,
-            price: Number,
-            quantity: Number,
-            image: String
-        }
+            name: { type: String,required: true},
+            price: {type: Number,required: true},
+            quantity: {type: Number,required: true},
+            image: String }
+
     ],
 
     totalAmount: {
@@ -26,12 +27,13 @@ const OrderSchema = new mongoose.Schema({
     },
 
     address: {
-        name: String,
-        phone: String,
-        street: String,
-        city: String,
-        pincode: String
+        name: { type: String, required: true },
+        phone: { type: String, required: true },
+        street: { type: String, required: true },
+        city: { type: String, required: true },
+        pincode: { type: String, required: true }
     },
+
 
     paymentMethod: {
         type: String,
@@ -39,8 +41,10 @@ const OrderSchema = new mongoose.Schema({
         default: 'COD'
     },
 
+
     status: {
         type: String,
+        enum: ['PLACED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'RETURNED'],
         default: 'PLACED'
     }
 
