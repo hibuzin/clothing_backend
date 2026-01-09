@@ -8,7 +8,12 @@ const ProductSchema = new mongoose.Schema({
     size: { type: String },
     color: { type: String },
     description: { type: String },
-    image: { type: String, required: true }
+    image: { type: String, required: true },
+
+    reviews: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Review'
+  }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', ProductSchema);

@@ -5,12 +5,10 @@ const Product = require('../models/product');
 const Order = require('../models/order');
 const auth = require('../middleware/auth');
 
-
-
 const router = express.Router();
 
 /**
- * ADD REVIEW (only if purchased)
+ * ADD REVIEW (only if purchased, one review per user per product)
  * POST /api/reviews/:productId
  */
 router.post('/:productId', auth, async (req, res) => {
@@ -19,22 +17,32 @@ router.post('/:productId', auth, async (req, res) => {
     const { productId } = req.params;
     const userId = req.user.id;
 
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+    }
+
     // check product exists
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    // 🔍 PURCHASE CHECK
+    // prevent duplicate review
+    const existingReview = await Review.findOne({
+      user: userId,
+      product: productId
+    });
+
+    if (existingReview) {
+      return res.status(400).json({ error: 'You already reviewed this product' });
+    }
+
+    // purchase check (only delivered orders)
     const order = await Order.findOne({
       user: userId,
       status: 'DELIVERED',
       'items.product': new mongoose.Types.ObjectId(productId)
     });
-
-    // 🧪 DEBUG LOGS (temporary)
-    console.log('Product ID:', productId);
-    console.log('Order found:', order);
 
     if (!order) {
       return res.status(403).json({
@@ -42,7 +50,7 @@ router.post('/:productId', auth, async (req, res) => {
       });
     }
 
-    // CREATE REVIEW
+    // create review
     const review = await Review.create({
       product: productId,
       user: userId,
@@ -50,20 +58,23 @@ router.post('/:productId', auth, async (req, res) => {
       comment
     });
 
+    // link review to product
+    await Product.findByIdAndUpdate(productId, {
+      $push: { reviews: review._id }
+    });
+
     res.status(201).json({
       message: 'Review added',
       review
     });
-
   } catch (err) {
-    console.error('Review error:', err);
+    console.error('Add review error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-
 /**
- * UPDATE REVIEW
+ * UPDATE REVIEW (only owner)
  * PUT /api/reviews/:reviewId
  */
 router.put('/:reviewId', auth, async (req, res) => {
@@ -71,18 +82,21 @@ router.put('/:reviewId', auth, async (req, res) => {
     const { rating, comment } = req.body;
 
     const review = await Review.findById(req.params.reviewId);
-
     if (!review) {
       return res.status(404).json({ error: 'Review not found' });
     }
 
-    // only owner can update
     if (review.user.toString() !== req.user.id) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
-    // update fields
-    if (rating !== undefined) review.rating = rating;
+    if (rating !== undefined) {
+      if (rating < 1 || rating > 5) {
+        return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+      }
+      review.rating = rating;
+    }
+
     if (comment !== undefined) review.comment = comment;
 
     await review.save();
@@ -92,12 +106,15 @@ router.put('/:reviewId', auth, async (req, res) => {
       review
     });
   } catch (err) {
+    console.error('Update review error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-
-
+/**
+ * GET ALL REVIEWS (admin/debug)
+ * GET /api/reviews
+ */
 router.get('/', async (req, res) => {
   try {
     const reviews = await Review.find()
@@ -112,12 +129,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-
 /**
- * GET PRODUCT REVIEWS
- * GET /api/reviews/:productId
+ * GET REVIEWS BY PRODUCT
+ * GET /api/reviews/product/:productId
  */
-router.get('/:productId', async (req, res) => {
+router.get('/product/:productId', async (req, res) => {
   try {
     const reviews = await Review.find({ product: req.params.productId })
       .populate('user', 'name email')
@@ -125,16 +141,13 @@ router.get('/:productId', async (req, res) => {
 
     res.json(reviews);
   } catch (err) {
+    console.error('Get product reviews error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
 /**
- * DELETE MY REVIEW
- * DELETE /api/reviews/:productId
- */
-/**
- * DELETE REVIEW
+ * DELETE REVIEW (only owner)
  * DELETE /api/reviews/delete/:reviewId
  */
 router.delete('/delete/:reviewId', auth, async (req, res) => {
@@ -149,12 +162,18 @@ router.delete('/delete/:reviewId', auth, async (req, res) => {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
+    // remove review reference from product
+    await Product.findByIdAndUpdate(review.product, {
+      $pull: { reviews: review._id }
+    });
+
     await review.deleteOne();
 
     res.json({ message: 'Review deleted' });
   } catch (err) {
+    console.error('Delete review error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
-module.exports = router;
 
+module.exports = router;
