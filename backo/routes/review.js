@@ -44,6 +44,26 @@ router.post('/:productId', auth, async (req, res) => {
   }
 });
 
+
+/**
+ * GET ALL REVIEWS
+ * GET /api/reviews
+ */
+router.get('/', async (req, res) => {
+  try {
+    const reviews = await Review.find()
+      .populate('user', 'name email')
+      .populate('product', 'name price')
+      .sort({ createdAt: -1 });
+
+    res.json(reviews);
+  } catch (err) {
+    console.error('Get all reviews error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
 /**
  * GET PRODUCT REVIEWS
  * GET /api/reviews/:productId
