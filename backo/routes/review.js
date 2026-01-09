@@ -58,10 +58,7 @@ router.post('/:productId', auth, async (req, res) => {
       comment
     });
 
-    // link review to product
-    await Product.findByIdAndUpdate(productId, {
-      $push: { reviews: review._id }
-    });
+    
 
     res.status(201).json({
       message: 'Review added',
@@ -71,6 +68,16 @@ router.post('/:productId', auth, async (req, res) => {
     console.error('Add review error:', err);
     res.status(500).json({ error: 'Server error' });
   }
+});
+
+// 🔥 PUSH REVIEW INTO PRODUCT
+await Product.findByIdAndUpdate(productId, {
+  $push: { reviews: review._id }
+});
+
+res.status(201).json({
+  message: 'Review added',
+  review
 });
 
 /**
