@@ -75,55 +75,68 @@ router.get('/subcategory/:subId', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
     try {
+        console.log('================ PRODUCT DETAILS ================');
+        console.log('ENDPOINT: GET /api/products/:id');
+        console.log('PRODUCT ID:', req.params.id);
+
         const product = await Product.findById(req.params.id)
-            .populate('category', 'name image')
-            .populate('subcategory', 'name image')
-            .populate({
-                path: 'reviews',
-                populate: {
-                    path: 'user',
-                    select: 'name email'
-                },
-                options: { sort: { createdAt: -1 } }
-            });
+            .populate('category subcategory');
 
         if (!product) {
+            console.log('Product not found');
             return res.status(404).json({ error: 'Product not found' });
         }
 
+        console.log('PRODUCT FOUND');
+        console.log('=================================================');
+
         res.json(product);
     } catch (err) {
+        console.error('FETCH PRODUCT ERROR');
         console.error(err);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-
-router.get('/:id', async (req, res) => {
+router.put('/:id', auth, upload.single('image'), async (req, res) => {
     try {
-        const product = await Product.findById(req.params.id)
-            .populate('category', 'name image')
-            .populate('subcategory', 'name image')
-            .populate({
-                path: 'reviews',
-                populate: {
-                    path: 'user',
-                    select: 'name email'
-                },
-                options: { sort: { createdAt: -1 } }
-            });
+        console.log('================ PRODUCT UPDATE ================');
+        console.log('ENDPOINT: PUT /api/products/:id');
+        console.log('USER ID:', req.userId);
+        console.log('PRODUCT ID:', req.params.id);
+        console.log('BODY:', req.body);
+        console.log('FILE:', req.file);
+
+        const product = await Product.findById(req.params.id);
 
         if (!product) {
+            console.log('Product not found');
             return res.status(404).json({ error: 'Product not found' });
         }
 
-        res.json(product);
+        Object.keys(req.body).forEach(key => {
+            product[key] = req.body[key];
+        });
+
+        if (req.file) {
+            product.image = req.file.path;
+        }
+
+        await product.save();
+
+        console.log('PRODUCT UPDATED');
+        console.log('=================================================');
+
+        res.json({
+            message: 'Product updated successfully',
+            product
+        });
     } catch (err) {
+        console.error('UPDATE PRODUCT ERROR');
         console.error(err);
         res.status(500).json({ error: 'Server error' });
     }
 });
-
 
 router.delete('/:id', auth, async (req, res) => {
     try {
@@ -153,3 +166,4 @@ router.delete('/:id', auth, async (req, res) => {
 });
 
 module.exports = router;
+
