@@ -70,15 +70,6 @@ router.post('/:productId', auth, async (req, res) => {
   }
 });
 
-// 🔥 PUSH REVIEW INTO PRODUCT
-await Product.findByIdAndUpdate(productId, {
-  $push: { reviews: review._id }
-});
-
-res.status(201).json({
-  message: 'Review added',
-  review
-});
 
 /**
  * UPDATE REVIEW (only owner)
