@@ -13,6 +13,7 @@ const router = express.Router();
  * POST /api/reviews/:productId
  */
 router.post('/:productId', auth, upload.any(), async (req, res) => {
+  console.log(req.files);
   try {
     const { rating, comment } = req.body;
     const { productId } = req.params;
