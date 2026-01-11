@@ -4,6 +4,7 @@ const Review = require('../models/review');
 const Product = require('../models/product');
 const Order = require('../models/order');
 const auth = require('../middleware/auth');
+const upload = require('../middleware/uploadCloudinary');
 
 const router = express.Router();
 
@@ -11,7 +12,7 @@ const router = express.Router();
  * ADD REVIEW (only if purchased, one review per user per product)
  * POST /api/reviews/:productId
  */
-router.post('/:productId', auth, async (req, res) => {
+router.post('/:productId', auth, upload.array('images'), async (req, res) => {
   try {
     const { rating, comment } = req.body;
     const { productId } = req.params;
