@@ -80,14 +80,21 @@ router.get('/:id', async (req, res) => {
         console.log('PRODUCT ID:', req.params.id);
 
         const product = await Product.findById(req.params.id)
-            .populate('category subcategory');
+            .populate('category subcategory')
+            .populate({
+                path: 'reviews',
+                populate: {
+                    path: 'user',
+                    select: 'name email'
+                }
+            });
 
         if (!product) {
             console.log('Product not found');
             return res.status(404).json({ error: 'Product not found' });
         }
 
-        console.log('PRODUCT FOUND');
+        console.log('PRODUCT FOUND WITH REVIEWS');
         console.log('=================================================');
 
         res.json(product);
@@ -97,6 +104,7 @@ router.get('/:id', async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 });
+
 
 router.put('/:id', auth, upload.single('image'), async (req, res) => {
     try {
