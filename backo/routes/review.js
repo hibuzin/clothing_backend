@@ -22,8 +22,6 @@ router.post('/:productId', auth, upload.any(), async (req, res) => {
       return res.status(400).json({ error: 'Rating must be between 1 and 5' });
     }
 
-
-
     // check product exists
     const product = await Product.findById(productId);
     if (!product) {
@@ -33,7 +31,7 @@ router.post('/:productId', auth, upload.any(), async (req, res) => {
     // prevent duplicate review
     const existingReview = await Review.findOne({
       user: userId,
-      product: productId
+      product: productId,
     });
 
     if (existingReview) {
@@ -44,18 +42,17 @@ router.post('/:productId', auth, upload.any(), async (req, res) => {
     const order = await Order.findOne({
       user: userId,
       status: 'DELIVERED',
-      'items.product': new mongoose.Types.ObjectId(productId)
+      'items.product': new mongoose.Types.ObjectId(productId),
     });
 
     if (!order) {
       return res.status(403).json({
-        error: 'You must purchase this product to review'
+        error: 'You must purchase this product to review',
       });
     }
 
-    const images = req.files
-      ? req.files.map(file => file.path)
-      : [];
+    // ✅ collect image URLs (optional)
+    const images = req.files ? req.files.map(file => file.path) : [];
 
     // create review
     const review = await Review.create({
@@ -63,26 +60,25 @@ router.post('/:productId', auth, upload.any(), async (req, res) => {
       user: userId,
       rating,
       comment,
-      images
+      images, // ✅ SAVED HERE
     });
 
-    // OPTIONAL: link review to product (only if Product has reviews array)
+    // link review to product
     await Product.findByIdAndUpdate(productId, {
-      $addToSet: { reviews: review._id }
+      $addToSet: { reviews: review._id },
     });
 
-
-    res.status(201).json({ message: 'Review added', review });
+    res.status(201).json({
+      message: 'Review added',
+      review,
+    });
   } catch (err) {
     console.error('Add review error:', err);
     res.status(500).json({ error: 'Server error' });
   }
-});
+}
+);
 
-/**
- * UPDATE REVIEW (only owner)
- * PUT /api/reviews/:reviewId
- */
 router.put('/:reviewId', auth, async (req, res) => {
   try {
     const { rating, comment } = req.body;
