@@ -21,6 +21,8 @@ router.post('/:productId', auth, async (req, res) => {
       return res.status(400).json({ error: 'Rating must be between 1 and 5' });
     }
 
+
+
     // check product exists
     const product = await Product.findById(productId);
     if (!product) {
@@ -58,18 +60,18 @@ router.post('/:productId', auth, async (req, res) => {
       comment
     });
 
-    
-
-    res.status(201).json({
-      message: 'Review added',
-      review
+    // OPTIONAL: link review to product (only if Product has reviews array)
+    await Product.findByIdAndUpdate(productId, {
+      $addToSet: { reviews: review._id }
     });
+
+
+    res.status(201).json({ message: 'Review added', review });
   } catch (err) {
     console.error('Add review error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
-
 
 /**
  * UPDATE REVIEW (only owner)
