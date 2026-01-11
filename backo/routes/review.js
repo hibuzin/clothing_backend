@@ -53,12 +53,17 @@ router.post('/:productId', auth, upload.array('images'), async (req, res) => {
       });
     }
 
+    const images = req.files
+      ? req.files.map(file => file.path)
+      : [];
+
     // create review
     const review = await Review.create({
       product: productId,
       user: userId,
       rating,
-      comment
+      comment,
+      images
     });
 
     // OPTIONAL: link review to product (only if Product has reviews array)
