@@ -12,7 +12,7 @@ const router = express.Router();
  * ADD REVIEW (only if purchased, one review per user per product)
  * POST /api/reviews/:productId
  */
-router.post('/:productId', auth, upload.array('images'), async (req, res) => {
+router.post('/:productId', auth, upload.any(), async (req, res) => {
   try {
     const { rating, comment } = req.body;
     const { productId } = req.params;
