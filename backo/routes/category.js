@@ -9,21 +9,35 @@ const router = express.Router();
 
 
 router.post('/', auth, upload.single('image'), async (req, res) => {
-    try {
-        const { name } = req.body;
-        if (!name || !req.file)
-            return res.status(400).json({ error: 'Name and image required' });
+  try {
+    console.log('🧪 CATEGORY ROUTE HIT');
+    console.log('req.body:', req.body);
+    console.log('req.file:', req.file);
 
-        const category = await Category.create({
-            name,
-            image: req.file.path
-        });
+    const { name } = req.body;
 
-        res.json(category);
-    } catch (err) {
-        res.status(500).json({ error: 'Server error' });
+    if (!name) {
+      console.log('❌ NAME MISSING');
+      return res.status(400).json({ error: 'Name required' });
     }
+
+    if (!req.file) {
+      console.log('❌ FILE MISSING');
+      return res.status(400).json({ error: 'Image required' });
+    }
+
+    const category = await Category.create({
+      name,
+      image: req.file.path,
+    });
+
+    res.json(category);
+  } catch (err) {
+    console.error('❌ CATEGORY CREATE ERROR:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
+
 
 
 
