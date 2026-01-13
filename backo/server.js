@@ -15,6 +15,9 @@ const addressRoutes = require('./routes/address');
 const advertisementRoutes = require('./routes/advertisement');
 const reviewRoutes = require('./routes/review');
 
+console.log('Cloudinary uploader:', require('./config/cloudinary').uploader);
+
+
 
 const app = express();
 app.use(cors());
