@@ -11,7 +11,7 @@ const router = express.Router();
  */
 router.post('/', auth, upload.array('images'), async (req, res) => {
   try {
-    const { title, link, position, isActive } = req.body;
+    const { isActive, } = req.body;
 
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'Images required' });
@@ -20,9 +20,7 @@ router.post('/', auth, upload.array('images'), async (req, res) => {
     const imageUrls = req.files.map(file => file.path);
 
     const ad = await Advertisement.create({
-      title,
-      link,
-      position,
+
       isActive,
       images: imageUrls
     });
@@ -40,9 +38,7 @@ router.post('/', auth, upload.array('images'), async (req, res) => {
  */
 router.get('/', async (req, res) => {
   try {
-    const ads = await Advertisement.find({ isActive: true })
-      .sort({ position: 1 });
-
+    const ads = await Advertisement.find({ isActive: true });
     res.json(ads);
   } catch (err) {
     console.error('GET ADS ERROR:', err);
