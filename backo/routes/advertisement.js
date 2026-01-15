@@ -1,7 +1,7 @@
 const express = require('express');
 const Advertisement = require('../models/advertisement');
 const auth = require('../middleware/auth');
-const upload = require('../middleware/uploadCloudinary');
+const upload = require('../middleware/upload');
 
 const router = express.Router();
 
