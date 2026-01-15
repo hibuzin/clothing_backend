@@ -4,7 +4,7 @@ const Review = require('../models/review');
 const Product = require('../models/product');
 const Order = require('../models/order');
 const auth = require('../middleware/auth');
-const upload = require('../middleware/uploadCloudinary');
+const upload = require('../middleware/upload');
 
 const router = express.Router();
 
