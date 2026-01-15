@@ -1,17 +1,23 @@
 const mongoose = require('mongoose');
 
-const ProductSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
-    subcategory: { type: mongoose.Schema.Types.ObjectId, ref: 'SubCategory', required: true },
-    price: { type: Number, required: true },
-    size: { type: String },
-    color: { type: String },
-    brand: { type: String, required: true },
-    description: { type: String },
-    image: { type: String, required: true },
+const VariantSchema = new mongoose.Schema({
+  color: { type: String, required: true },
+  size: { type: String, required: true },
+  quantity: { type: Number, required: true }
+});
 
-    reviews: [{
+const ProductSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
+  subcategory: { type: mongoose.Schema.Types.ObjectId, ref: 'SubCategory', required: true },
+  price: { type: Number, required: true },
+  brand: { type: String, required: true },
+  description: { type: String },
+  image: { type: String, required: true },
+
+  variants: [VariantSchema], // ✅ NEW
+
+  reviews: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Review'
   }]

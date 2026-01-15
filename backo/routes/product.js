@@ -14,21 +14,28 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
         console.log('FILE:', req.file);
 
         if (!req.file) {
-            console.log('Image missing');
             return res.status(400).json({ error: 'Image is required' });
         }
 
-        const product = await Product.create({
-            ...req.body,
-            image: req.file.path
-        });
+        let variants = [];
+        if (req.body.variants) {
+            variants = JSON.parse(req.body.variants);
+        }
 
-        console.log('PRODUCT CREATED:', product._id);
-        console.log('================================================');
+        const product = await Product.create({
+      name: req.body.name,
+      category: req.body.category,
+      subcategory: req.body.subcategory,
+      price: req.body.price,
+      brand: req.body.brand,
+      description: req.body.description,
+      variants,                 // ✅ parsed variants
+      image: req.file.path
+    });
+
 
         res.json(product);
     } catch (err) {
-        console.error('CREATE PRODUCT ERROR');
         console.error(err);
         res.status(500).json({ error: 'Server error' });
     }
@@ -107,44 +114,49 @@ router.get('/:id', async (req, res) => {
 
 
 router.put('/:id', auth, upload.single('image'), async (req, res) => {
-    try {
-        console.log('================ PRODUCT UPDATE ================');
-        console.log('ENDPOINT: PUT /api/products/:id');
-        console.log('USER ID:', req.userId);
-        console.log('PRODUCT ID:', req.params.id);
-        console.log('BODY:', req.body);
-        console.log('FILE:', req.file);
+  try {
+    console.log('================ PRODUCT UPDATE ================');
+    console.log('ENDPOINT: PUT /api/products/:id');
+    console.log('USER ID:', req.userId);
+    console.log('PRODUCT ID:', req.params.id);
+    console.log('BODY:', req.body);
+    console.log('FILE:', req.file);
 
-        const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id);
 
-        if (!product) {
-            console.log('Product not found');
-            return res.status(404).json({ error: 'Product not found' });
-        }
-
-        Object.keys(req.body).forEach(key => {
-            product[key] = req.body[key];
-        });
-
-        if (req.file) {
-            product.image = req.file.path;
-        }
-
-        await product.save();
-
-        console.log('PRODUCT UPDATED');
-        console.log('=================================================');
-
-        res.json({
-            message: 'Product updated successfully',
-            product
-        });
-    } catch (err) {
-        console.error('UPDATE PRODUCT ERROR');
-        console.error(err);
-        res.status(500).json({ error: 'Server error' });
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
     }
+
+    // ✅ Update normal fields (EXCEPT variants)
+    Object.keys(req.body).forEach(key => {
+      if (key !== 'variants') {
+        product[key] = req.body[key];
+      }
+    });
+
+    // ✅ ADD THIS BLOCK HERE 👇
+    if (req.body.variants) {
+      product.variants = JSON.parse(req.body.variants);
+    }
+
+    // ✅ Image update
+    if (req.file) {
+      product.image = req.file.path;
+    }
+
+    await product.save();
+
+    res.json({
+      message: 'Product updated successfully',
+      product
+    });
+  } catch (err) {
+    console.error('UPDATE PRODUCT ERROR', err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
+
 
 router.delete('/:id', auth, async (req, res) => {
     try {
