@@ -2,12 +2,17 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const Cart = require('../models/cart');
 const Order = require('../models/order');
+const Product = require('../models/product');
 
 const router = express.Router();
 
+/**
+ * PLACE ORDER
+ * POST /api/orders
+ */
 router.post('/', auth, async (req, res) => {
     try {
-        console.log('PLACE ORDER REQUEST');
+        console.log('================ PLACE ORDER ================');
         console.log('USER ID:', req.userId);
 
         const { address, paymentMethod } = req.body;
@@ -28,21 +33,57 @@ router.post('/', auth, async (req, res) => {
         }
 
         let totalAmount = 0;
+        const orderItems = [];
 
-        const orderItems = validItems.map(item => {
-            totalAmount += item.product.price * item.quantity;
+       for (const item of validItems) {
+    const product = await Product.findById(item.product._id);
 
-            return {
-                product: item.product._id,
-                name: item.product.name,
-                price: item.product.price,
-                quantity: item.quantity,
-                image: item.product.image
-            };
+    if (!product) {
+        return res.status(400).json({ error: 'Product not found' });
+    }
+
+    // ✅ FIND VARIANT
+    const variant = product.variants.find(v =>
+        v.color === item.color && v.size === item.size
+    );
+
+    if (!variant) {
+        return res.status(400).json({
+            error: `Variant not found for ${product.name} (${item.color}, ${item.size})`
         });
+    }
 
+    // ❌ NOT ENOUGH STOCK
+    if (variant.quantity < item.quantity) {
+        return res.status(400).json({
+            error: `Only ${variant.quantity} left for ${product.name}`
+        });
+    }
 
+    // 🔥 SAFE DECREMENT
+    variant.quantity = Number(variant.quantity) - Number(item.quantity);
 
+    // 🧹 REMOVE VARIANT ONLY WHEN ZERO
+    if (variant.quantity === 0) {
+        product.variants = product.variants.filter(v =>
+            !(v.color === item.color && v.size === item.size)
+        );
+    }
+
+    await product.save();
+
+    totalAmount += product.price * item.quantity;
+
+    orderItems.push({
+        product: product._id,
+        name: product.name,
+        price: product.price,
+        color: item.color,
+        size: item.size,
+        quantity: item.quantity,
+        image: product.image
+    });
+}
 
 
         const order = await Order.create({
@@ -53,11 +94,12 @@ router.post('/', auth, async (req, res) => {
             paymentMethod
         });
 
-        // Clear cart
+        // 🧹 Clear cart
         cart.items = [];
         await cart.save();
 
         console.log('✅ ORDER PLACED:', order._id);
+        console.log('=============================================');
 
         res.json({
             message: 'Order placed successfully',
@@ -71,11 +113,14 @@ router.post('/', auth, async (req, res) => {
     }
 });
 
-// GET ALL ORDERS (TEMP – without admin role)
+/**
+ * GET ALL ORDERS (Admin / Temp)
+ * GET /api/orders
+ */
 router.get('/', auth, async (req, res) => {
     try {
         const orders = await Order.find()
-            .populate('user', 'name email') // optional
+            .populate('user', 'name email')
             .sort({ createdAt: -1 });
 
         res.json(orders);
@@ -84,8 +129,10 @@ router.get('/', auth, async (req, res) => {
     }
 });
 
-
-
+/**
+ * GET MY ORDERS
+ * GET /api/orders/my
+ */
 router.get('/my', auth, async (req, res) => {
     const orders = await Order.find({ user: req.userId })
         .sort({ createdAt: -1 });
@@ -93,10 +140,10 @@ router.get('/my', auth, async (req, res) => {
     res.json(orders);
 });
 
-
-
-
-
+/**
+ * GET SINGLE ORDER
+ * GET /api/orders/:id
+ */
 router.get('/:id', auth, async (req, res) => {
     const order = await Order.findOne({
         _id: req.params.id,
@@ -110,7 +157,10 @@ router.get('/:id', auth, async (req, res) => {
     res.json(order);
 });
 
-
+/**
+ * CANCEL ORDER
+ * PUT /api/orders/:orderId/cancel
+ */
 router.put('/:orderId/cancel', auth, async (req, res) => {
     try {
         const order = await Order.findById(req.params.orderId);
@@ -119,16 +169,37 @@ router.put('/:orderId/cancel', auth, async (req, res) => {
             return res.status(404).json({ error: 'Order not found' });
         }
 
-        // Ensure order belongs to user
         if (order.user.toString() !== req.userId) {
             return res.status(403).json({ error: 'Not allowed to cancel this order' });
         }
 
-        // Only PLACED orders can be cancelled
         if (order.status !== 'PLACED') {
             return res.status(400).json({
                 error: `Order cannot be cancelled when status is ${order.status}`
             });
+        }
+
+        for (const item of order.items) {
+            const product = await Product.findById(item.product);
+
+            if (!product) continue;
+
+            let variant = product.variants.find(v =>
+                v.color === item.color && v.size === item.size
+            );
+
+            if (variant) {
+                variant.quantity += item.quantity;
+            } else {
+                // Variant was removed earlier → recreate
+                product.variants.push({
+                    color: item.color,
+                    size: item.size,
+                    quantity: item.quantity
+                });
+            }
+
+            await product.save();
         }
 
         order.status = 'CANCELLED';
@@ -144,25 +215,40 @@ router.put('/:orderId/cancel', auth, async (req, res) => {
     }
 });
 
-
+/**
+ * UPDATE ORDER STATUS (Admin)
+ * PUT /api/orders/:orderId/status
+ */
 router.put('/:orderId/status', auth, async (req, res) => {
     try {
         const { status } = req.body;
         const order = await Order.findById(req.params.orderId);
-        if (!order) return res.status(404).json({ error: 'Order not found' });
 
-        const allowedStatuses = ['PLACED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'RETURNED'];
-        if (!allowedStatuses.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+
+        const allowedStatuses = [
+            'PLACED',
+            'PROCESSING',
+            'SHIPPED',
+            'DELIVERED',
+            'CANCELLED',
+            'RETURNED'
+        ];
+
+        if (!allowedStatuses.includes(status)) {
+            return res.status(400).json({ error: 'Invalid status' });
+        }
 
         order.status = status;
         await order.save();
 
         res.json({ message: 'Order status updated', order });
+
     } catch (err) {
         res.status(500).json({ error: 'Server error' });
     }
 });
-
-
 
 module.exports = router;
