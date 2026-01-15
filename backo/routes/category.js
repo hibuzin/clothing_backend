@@ -8,9 +8,6 @@ const router = express.Router();
 
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
-    console.log('🧪 ROUTE HIT');
-    console.log('file exists:', !!req.file);
-
     if (!req.body.name) {
       return res.status(400).json({ error: 'Name required' });
     }
@@ -19,35 +16,18 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'Image required' });
     }
 
-    // ⬇️ MANUAL CLOUDINARY UPLOAD
-    const uploadResult = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          folder: 'backo-clothing',
-          resource_type: 'image',
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      );
-
-      stream.end(req.file.buffer);
-    });
-
-    console.log('✅ Cloudinary upload success:', uploadResult.secure_url);
-
     const category = await Category.create({
       name: req.body.name,
-      image: uploadResult.secure_url,
+      image: req.file.path, // ✅ already uploaded to Cloudinary
     });
 
     res.json(category);
   } catch (err) {
-    console.error('❌ CATEGORY UPLOAD ERROR:', err);
+    console.error('❌ CATEGORY ERROR:', err);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 
 
