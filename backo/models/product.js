@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const VariantSchema = new mongoose.Schema({
   color: { type: String, required: true },
   size: { type: String, required: true },
-  quantity: { type: Number, required: true }
+  quantity: { type: Number, required: true },
+  image: { type: String } // ✅ store size-specific image
 });
 
 const ProductSchema = new mongoose.Schema({
@@ -13,9 +14,9 @@ const ProductSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   brand: { type: String, required: true },
   description: { type: String },
-  image: { type: String, required: true },
+  image: { type: String, required: true }, // main product image
 
-  variants: [VariantSchema], // ✅ NEW
+  variants: [VariantSchema], // ✅ includes size-specific images
 
   reviews: [{
     type: mongoose.Schema.Types.ObjectId,
