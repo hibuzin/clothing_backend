@@ -41,13 +41,18 @@ router.post('/', auth, async (req, res) => {
         }
 
         // 🔍 Check variant exists
-        const variant = product.variants.find(v =>
-            v.color === color && v.size === size
-        );
-
+        const variant = product.variants.find(v => v.color === color);
         if (!variant) {
-            return res.status(400).json({ error: 'Variant not available' });
+            return res.status(400).json({ error: 'Color not available' });
         }
+
+        const sizeIndex = variant.size.indexOf(size);
+        if (sizeIndex === -1) {
+            return res.status(400).json({ error: 'Size not available' });
+        }
+
+        const availableQty = variant.quantity[sizeIndex];
+
 
         let cart = await Cart.findOne({ user: req.userId });
 
@@ -66,14 +71,11 @@ router.post('/', auth, async (req, res) => {
         );
 
         if (existingItem) {
-            if (existingItem.quantity + qty > variant.quantity) {
+            if (existingItem.quantity + qty > availableQty) {
                 return res.status(400).json({ error: 'Stock limit exceeded' });
             }
             existingItem.quantity += qty;
         } else {
-            if (qty > variant.quantity) {
-                return res.status(400).json({ error: 'Stock limit exceeded' });
-            }
             cart.items.push({
                 product: productId,
                 color,
@@ -81,6 +83,7 @@ router.post('/', auth, async (req, res) => {
                 quantity: qty
             });
         }
+
 
         await cart.save();
 
@@ -131,13 +134,20 @@ router.put('/', auth, async (req, res) => {
             return res.status(404).json({ error: 'Product not found' });
         }
 
-        const variant = product.variants.find(v =>
-            v.color === color && v.size === size
-        );
+        const variant = product.variants.find(v => v.color === color);
+        if (!variant) {
+            return res.status(400).json({ error: 'Color not available' });
+        }
 
-        if (!variant || qty > variant.quantity) {
+        const sizeIndex = variant.size.indexOf(size);
+        if (sizeIndex === -1) {
+            return res.status(400).json({ error: 'Size not available' });
+        }
+
+        if (qty > variant.quantity[sizeIndex]) {
             return res.status(400).json({ error: 'Stock limit exceeded' });
         }
+
 
         item.quantity = qty;
         await cart.save();
