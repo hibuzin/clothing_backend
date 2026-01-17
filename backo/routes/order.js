@@ -24,67 +24,56 @@ router.post('/', auth, async (req, res) => {
             return res.status(400).json({ error: 'Cart is empty' });
         }
 
-        const validItems = cart.items.filter(item =>
-            item.product && item.product.price != null
-        );
-
-        if (validItems.length === 0) {
-            return res.status(400).json({ error: 'No valid products in cart' });
-        }
+        // ✅ VALID ITEMS
+        const validItems = cart.items.filter(i => i.product);
 
         let totalAmount = 0;
         const orderItems = [];
 
-       for (const item of validItems) {
-    const product = await Product.findById(item.product._id);
+        for (const item of validItems) {
+            const product = await Product.findById(item.product._id);
+            if (!product) return res.status(400).json({ error: 'Product not found' });
 
-    if (!product) {
-        return res.status(400).json({ error: 'Product not found' });
-    }
+            const variant = product.variants.find(v => v.color === item.color);
+            if (!variant) return res.status(400).json({ error: 'Color not found' });
 
-    // ✅ FIND VARIANT
-    const variant = product.variants.find(v =>
-        v.color === item.color && v.size === item.size
-    );
+            const sizeIndex = variant.size.indexOf(item.size);
+            if (sizeIndex === -1) return res.status(400).json({ error: 'Size not found' });
 
-    if (!variant) {
-        return res.status(400).json({
-            error: `Variant not found for ${product.name} (${item.color}, ${item.size})`
-        });
-    }
+            if (variant.quantity[sizeIndex] < item.quantity) {
+                return res.status(400).json({
+                    error: `Only ${variant.quantity[sizeIndex]} left`
+                });
+            }
 
-    // ❌ NOT ENOUGH STOCK
-    if (variant.quantity < item.quantity) {
-        return res.status(400).json({
-            error: `Only ${variant.quantity} left for ${product.name}`
-        });
-    }
+            // 🔥 REDUCE STOCK
+            variant.quantity[sizeIndex] -= item.quantity;
 
-    // 🔥 SAFE DECREMENT
-    variant.quantity = Number(variant.quantity) - Number(item.quantity);
+            // 🧹 REMOVE SIZE IF ZERO
+            if (variant.quantity[sizeIndex] === 0) {
+                variant.size.splice(sizeIndex, 1);
+                variant.quantity.splice(sizeIndex, 1);
+            }
 
-    // 🧹 REMOVE VARIANT ONLY WHEN ZERO
-    if (variant.quantity === 0) {
-        product.variants = product.variants.filter(v =>
-            !(v.color === item.color && v.size === item.size)
-        );
-    }
+            // 🧹 REMOVE COLOR IF EMPTY
+            if (variant.size.length === 0) {
+                product.variants = product.variants.filter(v => v.color !== item.color);
+            }
 
-    await product.save();
+            await product.save();
 
-    totalAmount += product.price * item.quantity;
+            totalAmount += product.price * item.quantity;
 
-    orderItems.push({
-        product: product._id,
-        name: product.name,
-        price: product.price,
-        color: item.color,
-        size: item.size,
-        quantity: item.quantity,
-        image: product.image
-    });
-}
-
+            orderItems.push({
+                product: product._id,
+                name: product.name,
+                price: product.price,
+                color: item.color,
+                size: item.size,
+                quantity: item.quantity,
+                image: product.image
+            });
+        }
 
         const order = await Order.create({
             user: req.userId,
@@ -94,25 +83,16 @@ router.post('/', auth, async (req, res) => {
             paymentMethod
         });
 
-        // 🧹 Clear cart
         cart.items = [];
         await cart.save();
 
-        console.log('✅ ORDER PLACED:', order._id);
-        console.log('=============================================');
-
-        res.json({
-            message: 'Order placed successfully',
-            order
-        });
+        res.json({ message: 'Order placed successfully', order });
 
     } catch (err) {
-        console.error('🔥 ORDER ERROR');
         console.error(err);
         res.status(500).json({ error: 'Server error' });
     }
 });
-
 /**
  * GET ALL ORDERS (Admin / Temp)
  * GET /api/orders
@@ -181,26 +161,30 @@ router.put('/:orderId/cancel', auth, async (req, res) => {
 
         for (const item of order.items) {
             const product = await Product.findById(item.product);
-
             if (!product) continue;
 
-            let variant = product.variants.find(v =>
-                v.color === item.color && v.size === item.size
-            );
+            let variant = product.variants.find(v => v.color === item.color);
 
             if (variant) {
-                variant.quantity += item.quantity;
+                const index = variant.size.indexOf(item.size);
+
+                if (index !== -1) {
+                    variant.quantity[index] += item.quantity;
+                } else {
+                    variant.size.push(item.size);
+                    variant.quantity.push(item.quantity);
+                }
             } else {
-                // Variant was removed earlier → recreate
                 product.variants.push({
                     color: item.color,
-                    size: item.size,
-                    quantity: item.quantity
+                    size: [item.size],
+                    quantity: [item.quantity]
                 });
             }
 
             await product.save();
         }
+
 
         order.status = 'CANCELLED';
         await order.save();

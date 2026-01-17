@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 
 const VariantSchema = new mongoose.Schema({
   color: { type: String, required: true },
-  size: { type: String, required: true },
-  quantity: { type: Number, required: true },
+  size: { type: [String], required: true },
+  quantity: { type: [Number], required: true },
   image: { type: String } // ✅ store size-specific image
 });
 

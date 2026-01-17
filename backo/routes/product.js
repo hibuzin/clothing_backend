@@ -8,18 +8,46 @@ const router = express.Router();
 // POST /api/products
 router.post('/', auth, upload.any(), async (req, res) => {
     try {
-        const { name, brand, category, subcategory, price, description } = req.body;
+        console.log('FILES:', req.files);
+        console.log('BODY:', req.body);
+        const {
+            name,
+            brand,
+            category,
+            subcategory,
+            price,
+            description
+        } = req.body;
+
         const variants = JSON.parse(req.body.variants);
 
         variants.forEach(v => {
-            const key = `image_${v.color.toLowerCase()}_${v.size.toLowerCase()}`;
-            if (req.files.find(f => f.fieldname === key)) {
-                v.image = req.files.find(f => f.fieldname === key).path;
+            const fileKey = `image_${v.color}`;
+            const file = req.files.find(f => f.fieldname === fileKey);
+
+            if (!file) {
+                throw new Error(`Image required for color ${v.color}`);
             }
+
+            v.image = file.path; // ONE image for all sizes
         });
 
+
+        // Validate size & quantity length
+        for (const v of variants) {
+            if (v.size.length !== v.quantity.length) {
+                return res.status(400).json({
+                    error: `Size & quantity mismatch for color ${v.color}`
+                });
+            }
+        }
+
         const mainImage = variants.find(v => v.image)?.image;
-        if (!mainImage) return res.status(400).json({ error: 'At least one variant must have an image' });
+        if (!mainImage) {
+            return res.status(400).json({
+                error: 'At least one variant image required'
+            });
+        }
 
         const product = await Product.create({
             name,
@@ -38,6 +66,7 @@ router.post('/', auth, upload.any(), async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 });
+
 
 
 
@@ -128,34 +157,56 @@ router.put('/:id', auth, upload.any(), async (req, res) => {
             return res.status(404).json({ error: 'Product not found' });
         }
 
-        // ✅ Update normal fields (EXCEPT variants)
-        Object.keys(req.body).forEach(key => {
-            if (key !== 'variants') {
-                product[key] = req.body[key];
+        // ✅ Update normal fields (NOT variants)
+        const normalFields = [
+            'name',
+            'brand',
+            'price',
+            'description',
+            'category',
+            'subcategory'
+        ];
+
+        normalFields.forEach(field => {
+            if (req.body[field] !== undefined) {
+                product[field] = req.body[field];
             }
         });
 
+        // ✅ Update variants (your format)
         if (req.body.variants) {
             const variants = JSON.parse(req.body.variants);
 
-            // Assign images to variants dynamically
+            // attach images per color
             variants.forEach(v => {
-                const key = `image_${v.color.toLowerCase()}_${v.size.toLowerCase()}`;
+                const key = `image_${v.color.toLowerCase()}`;
                 const file = req.files.find(f => f.fieldname === key);
                 if (file) v.image = file.path;
             });
 
+            // validate size & quantity length
+            for (const v of variants) {
+                if (!Array.isArray(v.size) || !Array.isArray(v.quantity)) {
+                    return res.status(400).json({
+                        error: 'size and quantity must be arrays'
+                    });
+                }
 
-            if (!variants.length || !variants.find(v => v.image)) {
-                return res.status(400).json({ error: 'At least one variant must have an image' });
+                if (v.size.length !== v.quantity.length) {
+                    return res.status(400).json({
+                        error: `Size & quantity mismatch for color ${v.color}`
+                    });
+                }
             }
 
             product.variants = variants;
 
-            // Update main product image to the first variant that has an image
-            product.image = variants.find(v => v.image)?.image || product.image;
+            // update main image
+            const mainImage = variants.find(v => v.image)?.image;
+            if (mainImage) {
+                product.image = mainImage;
+            }
         }
-
 
         await product.save();
 
