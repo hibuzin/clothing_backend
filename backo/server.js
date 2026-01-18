@@ -23,8 +23,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Add this line to serve static images
-app.use('/uploads', express.static('uploads'));
+
 
 app.use('/api/auth', authRoutes);
 // ... your other routes
