@@ -6,10 +6,11 @@ const upload = require('../middleware/upload');
 const router = express.Router();
 
 // POST /api/products
-router.post('/', auth, upload.any(), async (req, res) => {
+router.post('/', auth, upload.single('image'), async (req, res) => {
     try {
-        console.log('FILES:', req.files);
+        console.log('FILE:', req.file);
         console.log('BODY:', req.body);
+
         const {
             name,
             brand,
@@ -19,34 +20,25 @@ router.post('/', auth, upload.any(), async (req, res) => {
             description
         } = req.body;
 
+        if (!req.file) {
+            return res.status(400).json({ error: 'Product image is required' });
+        }
+
         const variants = JSON.parse(req.body.variants);
 
-        variants.forEach(v => {
-            const fileKey = `image_${v.color}`;
-            const file = req.files.find(f => f.fieldname === fileKey);
-
-            if (!file) {
-                throw new Error(`Image required for color ${v.color}`);
+        // ✅ Validate size & quantity
+        for (const v of variants) {
+            if (!Array.isArray(v.size) || !Array.isArray(v.quantity)) {
+                return res.status(400).json({
+                    error: 'size and quantity must be arrays'
+                });
             }
 
-            v.image = file.path; // ONE image for all sizes
-        });
-
-
-        // Validate size & quantity length
-        for (const v of variants) {
             if (v.size.length !== v.quantity.length) {
                 return res.status(400).json({
                     error: `Size & quantity mismatch for color ${v.color}`
                 });
             }
-        }
-
-        const mainImage = variants.find(v => v.image)?.image;
-        if (!mainImage) {
-            return res.status(400).json({
-                error: 'At least one variant image required'
-            });
         }
 
         const product = await Product.create({
@@ -56,16 +48,17 @@ router.post('/', auth, upload.any(), async (req, res) => {
             subcategory,
             price,
             description,
-            image: mainImage,
+            images: req.file.path, // ✅ ONE IMAGE
             variants
         });
 
-        res.json(product);
+        res.status(201).json(product);
     } catch (err) {
-        console.error(err);
+        console.error('CREATE PRODUCT ERROR:', err);
         res.status(500).json({ error: 'Server error' });
     }
 });
+
 
 router.get('/search', async (req, res) => {
     try {
@@ -218,23 +211,19 @@ router.get('/:id', async (req, res) => {
 });
 
 
-router.put('/:id', auth, upload.any(), async (req, res) => {
+router.put('/:id', auth, upload.single('image'), async (req, res) => {
     try {
         console.log('================ PRODUCT UPDATE ================');
-        console.log('ENDPOINT: PUT /api/products/:id');
-        console.log('USER ID:', req.userId);
-        console.log('PRODUCT ID:', req.params.id);
         console.log('BODY:', req.body);
         console.log('FILE:', req.file);
 
         const product = await Product.findById(req.params.id);
-
         if (!product) {
             return res.status(404).json({ error: 'Product not found' });
         }
 
-        // ✅ Update normal fields (NOT variants)
-        const normalFields = [
+        // ✅ Update normal fields
+        const fields = [
             'name',
             'brand',
             'price',
@@ -243,24 +232,21 @@ router.put('/:id', auth, upload.any(), async (req, res) => {
             'subcategory'
         ];
 
-        normalFields.forEach(field => {
+        fields.forEach(field => {
             if (req.body[field] !== undefined) {
                 product[field] = req.body[field];
             }
         });
 
-        // ✅ Update variants (your format)
+        // ✅ Update image (optional)
+        if (req.file) {
+            product.images = req.file.path;
+        }
+
+        // ✅ Update variants
         if (req.body.variants) {
             const variants = JSON.parse(req.body.variants);
 
-            // attach images per color
-            variants.forEach(v => {
-                const key = `image_${v.color.toLowerCase()}`;
-                const file = req.files.find(f => f.fieldname === key);
-                if (file) v.image = file.path;
-            });
-
-            // validate size & quantity length
             for (const v of variants) {
                 if (!Array.isArray(v.size) || !Array.isArray(v.quantity)) {
                     return res.status(400).json({
@@ -276,12 +262,6 @@ router.put('/:id', auth, upload.any(), async (req, res) => {
             }
 
             product.variants = variants;
-
-            // update main image
-            const mainImage = variants.find(v => v.image)?.image;
-            if (mainImage) {
-                product.image = mainImage;
-            }
         }
 
         await product.save();
@@ -291,10 +271,11 @@ router.put('/:id', auth, upload.any(), async (req, res) => {
             product
         });
     } catch (err) {
-        console.error('UPDATE PRODUCT ERROR', err);
+        console.error('UPDATE PRODUCT ERROR:', err);
         res.status(500).json({ error: 'Server error' });
     }
 });
+
 
 
 router.delete('/:id', auth, async (req, res) => {
