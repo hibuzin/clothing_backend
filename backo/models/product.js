@@ -7,6 +7,8 @@ const VariantSchema = new mongoose.Schema({
   image: { type: String } // ✅ store size-specific image
 });
 
+
+
 const ProductSchema = new mongoose.Schema({
   name: { type: String, required: true },
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
@@ -15,7 +17,6 @@ const ProductSchema = new mongoose.Schema({
   brand: { type: String, required: true },
   description: { type: String },
   images: { type: String, required: true }, // main product image
-
   variants: [VariantSchema], // ✅ includes size-specific images
 
   reviews: [{
@@ -23,5 +24,11 @@ const ProductSchema = new mongoose.Schema({
     ref: 'Review'
   }]
 }, { timestamps: true });
+
+ProductSchema.index({
+  name: 'text',
+  brand: 'text',
+  description: 'text'
+});
 
 module.exports = mongoose.model('Product', ProductSchema);

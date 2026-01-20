@@ -67,6 +67,58 @@ router.post('/', auth, upload.any(), async (req, res) => {
     }
 });
 
+router.get('/search', async (req, res) => {
+    try {
+        const {
+            q,            // search text
+            category,
+            subcategory,
+            brand,
+            minPrice,
+            maxPrice
+        } = req.query;
+
+        const filter = {};
+
+        // 🔎 Text search (name)
+        if (q) {
+            filter.$text = { $search: q };
+        }
+
+
+        // 📂 Category
+        if (category) {
+            filter.category = category;
+        }
+
+        // 📂 Subcategory
+        if (subcategory) {
+            filter.subcategory = subcategory;
+        }
+
+        // 🏷 Brand
+        if (brand) {
+            filter.brand = { $regex: brand, $options: 'i' };
+        }
+
+        // 💰 Price range
+        if (minPrice || maxPrice) {
+            filter.price = {};
+            if (minPrice) filter.price.$gte = Number(minPrice);
+            if (maxPrice) filter.price.$lte = Number(maxPrice);
+        }
+
+        const products = await Product.find(filter)
+            .select('name price images brand category subcategory');
+
+        res.json(products);
+    } catch (err) {
+        console.error('PRODUCT SEARCH ERROR:', err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+
 router.get('/:id/similar', async (req, res) => {
     try {
         const { id } = req.params;
@@ -83,7 +135,7 @@ router.get('/:id/similar', async (req, res) => {
             category: product.category,          // same category
             subcategory: product.subcategory     // same subcategory (optional)
         })
-            
+
             .select('name price image brand');  // optimize response
 
         res.json(similarProducts);
