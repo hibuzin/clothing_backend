@@ -83,8 +83,8 @@ router.get('/:id/similar', async (req, res) => {
             category: product.category,          // same category
             subcategory: product.subcategory     // same subcategory (optional)
         })
-            .limit(6)
-            .select('name price images brand');  // optimize response
+            
+            .select('name price image brand');  // optimize response
 
         res.json(similarProducts);
     } catch (err) {
