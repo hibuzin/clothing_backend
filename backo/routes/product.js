@@ -67,7 +67,31 @@ router.post('/', auth, upload.any(), async (req, res) => {
     }
 });
 
+router.get('/:id/similar', async (req, res) => {
+    try {
+        const { id } = req.params;
 
+        // 1. Get current product
+        const product = await Product.findById(id);
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        // 2. Find similar products
+        const similarProducts = await Product.find({
+            _id: { $ne: product._id },           // exclude current product
+            category: product.category,          // same category
+            subcategory: product.subcategory     // same subcategory (optional)
+        })
+            .limit(6)
+            .select('name price images brand');  // optimize response
+
+        res.json(similarProducts);
+    } catch (err) {
+        console.error('SIMILAR PRODUCT ERROR:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
 
 
 router.get('/', async (req, res) => {
