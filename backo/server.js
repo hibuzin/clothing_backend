@@ -23,6 +23,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const path = require('path');
+
+
 
 
 app.use('/api/auth', authRoutes);
@@ -67,6 +70,8 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/address', addressRoutes);
 app.use('/api/advertisements', advertisementRoutes);
 app.use('/api/review', reviewRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 
 
