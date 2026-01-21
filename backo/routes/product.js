@@ -48,7 +48,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
             subcategory,
             price,
             description,
-            images: req.file.path, // ✅ ONE IMAGE
+            images: `/uploads/${req.file.filename}`, // ✅ ONE IMAGE
             variants
         });
 

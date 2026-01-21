@@ -216,10 +216,11 @@ router.put('/:orderId/status', auth, async (req, res) => {
              'PLACED',
             'PROCESSING',
             'SHIPPED',
+            'CANCELLED',
             'DELIVERED',
             'RETURN_REQUESTED',
-            'RETURN_PLACED',
-            'CANCELLED'
+            'RETURN_ACCEPTED',
+            
         ];
 
         if (!allowedStatuses.includes(status)) {

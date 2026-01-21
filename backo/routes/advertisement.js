@@ -6,10 +6,6 @@ const upload = require('../middleware/upload');
 
 const router = express.Router();
 
-
-
-
-
 /**
  * CREATE ADVERTISEMENT (Admin)
  * POST /api/advertisements
