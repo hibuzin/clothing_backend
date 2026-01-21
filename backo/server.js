@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 
 
 const authRoutes = require('./routes/auth');
@@ -22,13 +23,10 @@ console.log('Cloudinary uploader:', require('./config/cloudinary').uploader);
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-const path = require('path');
-
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
 
-app.use('/api/auth', authRoutes);
 // ... your other routes
 
 app.use((req, res, next) => {
@@ -70,7 +68,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/address', addressRoutes);
 app.use('/api/advertisements', advertisementRoutes);
 app.use('/api/review', reviewRoutes);
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 
 
