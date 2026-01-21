@@ -3,7 +3,12 @@ const Advertisement = require('../models/advertisement');
 const auth = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
+
 const router = express.Router();
+
+
+
+
 
 /**
  * CREATE ADVERTISEMENT (Admin)
@@ -11,16 +16,17 @@ const router = express.Router();
  */
 router.post('/', auth, upload.array('images'), async (req, res) => {
   try {
-    const { isActive, } = req.body;
+    const { isActive } = req.body;
 
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'Images required' });
     }
 
-    const imageUrls = req.files.map(file => file.path);
+    const imageUrls = req.files.map(file =>
+      `${req.protocol}://${req.get('host')}/${file.path.replace(/\\/g, '/')}`
+    );
 
     const ad = await Advertisement.create({
-
       isActive,
       images: imageUrls
     });
@@ -31,6 +37,7 @@ router.post('/', auth, upload.array('images'), async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
 
 /**
  * GET ALL ACTIVE ADVERTISEMENTS (Public)
