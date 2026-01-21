@@ -8,22 +8,23 @@ const OrderSchema = new mongoose.Schema({
     },
 
     items: [
-    {
-        product: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Product',
-            required: true
-        },
-        name: { type: String, required: true },
-        price: { type: Number, required: true },
+        {
+            product: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Product',
+                required: true
+            },
+            name: { type: String, required: true },
+            price: { type: Number, required: true },
 
-        color: { type: String, required: true }, // ✅ selected color
-        size: { type: String, required: true },  // ✅ selected size
+            color: { type: String, required: true }, // ✅ selected color
+            size: { type: String, required: true },  // ✅ selected size
 
-        quantity: { type: Number, required: true },
-        image: String
-    }
-],
+            quantity: { type: Number, required: true },
+            returnedQty: { type: Number, default: 0 },
+            image: String
+        }
+    ],
 
 
     totalAmount: {
@@ -49,7 +50,7 @@ const OrderSchema = new mongoose.Schema({
 
     status: {
         type: String,
-        enum: ['PLACED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'RETURNED'],
+        enum: ['PLACED', 'PROCESSING', 'SHIPPED', 'DELIVERED','RETURN_REQUESTED',   'RETURN_PLACED', 'CANCELLED', 'RETURNED'],
         default: 'PLACED'
     }
 

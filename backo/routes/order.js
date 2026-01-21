@@ -213,16 +213,52 @@ router.put('/:orderId/status', auth, async (req, res) => {
         }
 
         const allowedStatuses = [
-            'PLACED',
+             'PLACED',
             'PROCESSING',
             'SHIPPED',
             'DELIVERED',
-            'CANCELLED',
-            'RETURNED'
+            'RETURN_REQUESTED',
+            'RETURN_PLACED',
+            'CANCELLED'
         ];
 
         if (!allowedStatuses.includes(status)) {
             return res.status(400).json({ error: 'Invalid status' });
+        }
+
+        if (
+            status === 'RETURN_PLACED' &&
+            order.status !== 'RETURN_PLACED'
+        ) {
+            for (const item of order.items) {
+                if (item.returnedQty === 0) continue;
+
+                const product = await Product.findById(item.product);
+                if (!product) continue;
+
+                let variant = product.variants.find(
+                    v => v.color === item.color
+                );
+
+                if (variant) {
+                    const index = variant.size.indexOf(item.size);
+
+                    if (index !== -1) {
+                        variant.quantity[index] += item.returnedQty;
+                    } else {
+                        variant.size.push(item.size);
+                        variant.quantity.push(item.returnedQty);
+                    }
+                } else {
+                    product.variants.push({
+                        color: item.color,
+                        size: [item.size],
+                        quantity: [item.returnedQty]
+                    });
+                }
+
+                await product.save();
+            }
         }
 
         order.status = status;
@@ -231,8 +267,59 @@ router.put('/:orderId/status', auth, async (req, res) => {
         res.json({ message: 'Order status updated', order });
 
     } catch (err) {
+         console.error(err);
         res.status(500).json({ error: 'Server error' });
     }
 });
+
+
+/**
+ * USER RETURN PRODUCT
+ */
+router.put('/:orderId/return', auth, async (req, res) => {
+    try {
+        const { productId, quantity } = req.body;
+
+        const order = await Order.findById(req.params.orderId);
+        if (!order) return res.status(404).json({ error: 'Order not found' });
+
+        if (order.user.toString() !== req.userId) {
+            return res.status(403).json({ error: 'Not allowed' });
+        }
+
+        if (order.status !== 'DELIVERED') {
+            return res.status(400).json({
+                error: 'Only delivered orders can be returned'
+            });
+        }
+
+        const item = order.items.find(
+            i => i.product.toString() === productId
+        );
+
+        if (!item) {
+            return res.status(404).json({ error: 'Product not found in order' });
+        }
+
+        if (quantity > item.quantity - item.returnedQty) {
+            return res.status(400).json({ error: 'Invalid return quantity' });
+        }
+
+        item.returnedQty += quantity;
+        order.status = 'RETURN_REQUESTED';
+
+        await order.save();
+
+        res.json({
+            message: 'Return request placed',
+            order
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 
 module.exports = router;
