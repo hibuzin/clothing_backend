@@ -2,6 +2,8 @@ const express = require('express');
 const Product = require('../models/product');
 const auth = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const cloudinary = require('../config/cloudinary');
+
 
 const router = express.Router();
 
@@ -41,6 +43,17 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
             }
         }
 
+        //  Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(
+      `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
+      { folder: 'products' }
+    );
+
+    if (!result.secure_url) {
+      return res.status(500).json({ error: 'Cloudinary upload failed' });
+    }
+
+
         const product = await Product.create({
             name,
             brand,
@@ -48,7 +61,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
             subcategory,
             price,
             description,
-            image: `/uploads/${req.file.filename}`, // ✅ ONE IMAGE
+            image: result.secure_url,  
             variants
         });
 
@@ -238,10 +251,14 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
             }
         });
 
-        // ✅ Update image (optional)
         if (req.file) {
-            product.images = req.file.path;
-        }
+  const result = await cloudinary.uploader.upload(
+    `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
+    { folder: 'products' }
+  );
+  product.image = result.secure_url;
+}
+
 
         // ✅ Update variants
         if (req.body.variants) {
