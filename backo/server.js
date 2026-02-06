@@ -65,6 +65,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/address', addressRoutes);
 app.use('/api/advertisements', advertisementRoutes);
 app.use('/api/review', reviewRoutes);
+app.use('/api/upload', require('./routes/upload'));//cloudinary check
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 

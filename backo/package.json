@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.9.0",
     "cors": "^2.8.6",
     "dotenv": "^17.2.4",
     "express": "^4.22.1",
@@ -15,6 +16,7 @@
     "mongoose": "^9.1.6",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^3.0.1",
+    "streamifier": "^0.1.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   },
