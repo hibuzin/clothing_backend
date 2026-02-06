@@ -13,6 +13,13 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
         console.log('FILE:', req.file);
         console.log('BODY:', req.body);
 
+        if (!req.file) {
+            return res.status(400).json({ error: 'Product image is required' });
+        }
+
+
+        console.log('UPLOAD PATH:', req.file.path);
+
         const {
             name,
             brand,
