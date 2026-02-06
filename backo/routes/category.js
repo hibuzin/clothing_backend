@@ -26,26 +26,23 @@ router.post(
     console.log('🧪 req.file:', req.file);
 
     try {
-      if (!req.body.name) {
-        return res.status(400).json({ error: 'Name required' });
-      }
-
-      if (!req.file) {
-        return res.status(400).json({ error: 'Image required' });
-      }
-
-      const category = await Category.create({
-        name: req.body.name,
-        image: req.file.path,
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'categories',
       });
 
-      res.json(category);
+      const category = new Category({
+        name: req.body.name,
+        image: result.secure_url, // ✅ CLOUDINARY URL
+      });
+
+      await category.save();
+
+      res.status(201).json(category);
     } catch (err) {
-      console.error('❌ CATEGORY ERROR:', err);
-      res.status(500).json({ error: err.message });
+      console.error(err);
+      res.status(500).json({ message: 'Upload failed' });
     }
-  }
-);
+  });
 
 
 
