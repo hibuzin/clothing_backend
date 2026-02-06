@@ -5,7 +5,7 @@ const cloudinary = require('../config/cloudinary');
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: 'products', // cloudinary folder name
+    folder: 'backo-clothing', // cloudinary folder name
     allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
   },
 });
