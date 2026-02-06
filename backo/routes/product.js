@@ -3,53 +3,54 @@ const Product = require('../models/product');
 const auth = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const cloudinary = require('../config/cloudinary');
+const fs = require('fs');
 
 
 const router = express.Router();
 
 // POST /api/products
+// POST /api/products
 router.post('/', auth, upload.single('image'), async (req, res) => {
     try {
-        console.log('FILE:', req.file);
+        console.log('================ CREATE PRODUCT ================');
         console.log('BODY:', req.body);
+        console.log('FILE:', req.file);
 
         if (!req.file) {
             return res.status(400).json({ error: 'Product image is required' });
         }
 
+        const { name, brand, category, subcategory, price, description } = req.body;
 
-        console.log('UPLOAD PATH:', req.file.path);
+        // Upload image to Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path, {
+            folder: 'products',
+        });
 
-        const {
-            name,
-            brand,
-            category,
-            subcategory,
-            price,
-            description
-        } = req.body;
+        // Optional: delete local file after upload
+        const fs = require('fs');
+        fs.unlink(req.file.path, err => {
+            if (err) console.error('Failed to delete local file:', err);
+        });
 
-        if (!req.file) {
-            return res.status(400).json({ error: 'Product image is required' });
-        }
+        // Parse variants if provided
+        let variants = [];
+        if (req.body.variants) {
+            variants = JSON.parse(req.body.variants);
 
-        const variants = JSON.parse(req.body.variants);
+            // Validate size & quantity
+            for (const v of variants) {
+                if (!Array.isArray(v.size) || !Array.isArray(v.quantity)) {
+                    return res.status(400).json({ error: 'size and quantity must be arrays' });
+                }
 
-        // Validate size & quantity
-        for (const v of variants) {
-            if (!Array.isArray(v.size) || !Array.isArray(v.quantity)) {
-                return res.status(400).json({
-                    error: 'size and quantity must be arrays'
-                });
-            }
-
-            if (v.size.length !== v.quantity.length) {
-                return res.status(400).json({
-                    error: `Size & quantity mismatch for color ${v.color}`
-                });
+                if (v.size.length !== v.quantity.length) {
+                    return res.status(400).json({ error: `Size & quantity mismatch for color ${v.color}` });
+                }
             }
         }
 
+        // Create product in MongoDB
         const product = await Product.create({
             name,
             brand,
@@ -57,17 +58,20 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
             subcategory,
             price,
             description,
-            image: req.file.path, // ✅ Cloudinary URL
-            variants
+            image: result.secure_url, // Cloudinary URL
+            variants,
         });
 
-        res.status(201).json(product);
+        console.log('PRODUCT CREATED SUCCESSFULLY');
+        console.log('================================================');
 
+        res.status(201).json(product);
     } catch (err) {
         console.error('CREATE PRODUCT ERROR:', err);
         res.status(500).json({ error: 'Server error' });
     }
 });
+
 
 
 
