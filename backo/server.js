@@ -65,7 +65,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/address', addressRoutes);
 app.use('/api/advertisements', advertisementRoutes);
 app.use('/api/review', reviewRoutes);
-app.use('/api/upload', require('./routes/upload'));//cloudinary check
+
 
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://admin:askar1234Arshath@cluster0.pbf7dfj.mongodb.net/clothing?retryWrites=true&w=majority';

@@ -28,7 +28,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
 
         const variants = JSON.parse(req.body.variants);
 
-        // ✅ Validate size & quantity
+        // Validate size & quantity
         for (const v of variants) {
             if (!Array.isArray(v.size) || !Array.isArray(v.quantity)) {
                 return res.status(400).json({
@@ -43,17 +43,6 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
             }
         }
 
-        //  Upload to Cloudinary
-    const result = await cloudinary.uploader.upload(
-      `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
-      { folder: 'products' }
-    );
-
-    if (!result.secure_url) {
-      return res.status(500).json({ error: 'Cloudinary upload failed' });
-    }
-
-
         const product = await Product.create({
             name,
             brand,
@@ -61,16 +50,18 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
             subcategory,
             price,
             description,
-            image: result.secure_url,  
+            image: req.file.path, // ✅ Cloudinary URL
             variants
         });
 
         res.status(201).json(product);
+
     } catch (err) {
         console.error('CREATE PRODUCT ERROR:', err);
         res.status(500).json({ error: 'Server error' });
     }
 });
+
 
 
 router.get('/search', async (req, res) => {
@@ -252,12 +243,12 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
         });
 
         if (req.file) {
-  const result = await cloudinary.uploader.upload(
-    `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
-    { folder: 'products' }
-  );
-  product.image = result.secure_url;
-}
+            const result = await cloudinary.uploader.upload(
+                `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
+                { folder: 'products' }
+            );
+            product.image = result.secure_url;
+        }
 
 
         // ✅ Update variants

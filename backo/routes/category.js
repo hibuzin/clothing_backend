@@ -10,10 +10,7 @@ console.log('🧪 category.js loaded');
 console.log('🧪 cloudinary.uploader type in route:', typeof cloudinary?.uploader);
 
 
-router.post(
-  '/',
-  auth,
-  (req, res, next) => {
+router.post('/',auth,(req, res, next) => {
     console.log('🚀 MIDDLEWARE BEFORE MULTER HIT');
     next();
   },
