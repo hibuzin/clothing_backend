@@ -5,7 +5,7 @@ const cloudinary = require('../config/cloudinary');
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: 'backo', // cloudinary folder name
+    folder: 'products', // cloudinary folder name
     allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
   },
 });
