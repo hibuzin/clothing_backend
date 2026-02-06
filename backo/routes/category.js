@@ -3,7 +3,6 @@ const Category = require('../models/category');
 const auth = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const cloudinary = require('../config/cloudinary');
-const fs = require('fs');
 
 const router = express.Router();
 
@@ -26,34 +25,27 @@ router.post(
     console.log('🧪 req.body:', req.body);
     console.log('🧪 req.file:', req.file);
 
-     try {
-    // 1️⃣ Upload to Cloudinary
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: 'categories',
-    });
+    try {
+      if (!req.body.name) {
+        return res.status(400).json({ error: 'Name required' });
+      }
 
-    // 2️⃣ Delete local file (VERY IMPORTANT)
-    fs.unlinkSync(req.file.path);
+      if (!req.file) {
+        return res.status(400).json({ error: 'Image required' });
+      }
 
-    // 3️⃣ Save Cloudinary URL to DB
-    const category = new Category({
-      name: req.body.name,
-      image: result.secure_url,
-    });
+      const category = await Category.create({
+        name: req.body.name,
+        image: req.file.path,
+      });
 
-    await category.save();
-
-    res.status(201).json(category);
-  } catch (err) {
-    // safety cleanup if upload fails
-    if (req.file?.path && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
+      res.json(category);
+    } catch (err) {
+      console.error('❌ CATEGORY ERROR:', err);
+      res.status(500).json({ error: err.message });
     }
-
-    console.error(err);
-    res.status(500).json({ message: 'Image upload failed' });
   }
-});
+);
 
 
 
@@ -76,34 +68,20 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
     }
 
     if (req.file) {
-      // 1️⃣ Upload new image to Cloudinary
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: 'categories',
-      });
-
-      // 2️⃣ Delete local file
-      fs.unlinkSync(req.file.path);
-
-      // 3️⃣ Save Cloudinary URL
-      category.image = result.secure_url;
+      category.image = req.file.path;
     }
 
     await category.save();
 
     res.json({
       message: 'Category updated successfully',
-      category,
+      category
     });
   } catch (err) {
-    if (req.file?.path && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
-
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 });
-
 
 
 
