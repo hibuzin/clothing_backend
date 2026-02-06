@@ -12,7 +12,7 @@ router.post('/toggle', auth, async (req, res) => {
 
     const product = await Product.findById(productId);
     if (!product) {
-        console.log('❌ productId missing');
+        console.log('productId missing');
 
         return res.status(404).json({ error: 'Product not found' });
     }

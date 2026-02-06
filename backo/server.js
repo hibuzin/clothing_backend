@@ -26,12 +26,6 @@ app.use(cors());
 app.use(express.json());
 
 
-//app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-
-
-// ... your other routes
-
 app.use((req, res, next) => {
     console.log('------------------------------');
     console.log('📥 REQUEST');
@@ -85,3 +79,4 @@ mongoose.connect(MONGO_URI)
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+
