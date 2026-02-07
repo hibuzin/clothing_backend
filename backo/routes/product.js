@@ -1,14 +1,15 @@
 const express = require('express');
 const Product = require('../models/product');
 const auth = require('../middleware/auth');
-const multer = require('multer');
+const upload = require('../middleware/upload');
 const cloudinary = require('../config/cloudinary');
 
 
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage() });
 
+// POST /api/products
+// POST /api/products
 router.post('/', auth, upload.single('image'), async (req, res) => {
     try {
         console.log('================ CREATE PRODUCT ================');
@@ -21,10 +22,10 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
 
         const { name, brand, category, subcategory, price, description } = req.body;
 
-        const result = await cloudinary.uploader.upload(
-            `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
-            { folder: 'backo-clothing' });
-
+        // Upload image to Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path, {
+            folder: 'backo-clothing',
+        });
 
         // Optional: delete local file after upload
         const fs = require('fs');
