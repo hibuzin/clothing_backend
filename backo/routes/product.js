@@ -3,7 +3,7 @@ const Product = require('../models/product');
 const auth = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const cloudinary = require('../config/cloudinary');
-const fs = require('fs');
+
 
 
 const router = express.Router();
@@ -24,7 +24,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
 
         // Upload image to Cloudinary
         const result = await cloudinary.uploader.upload(req.file.path, {
-            folder: 'products',
+            folder: 'backo-clothing',
         });
 
         // Optional: delete local file after upload
@@ -58,7 +58,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
             subcategory,
             price,
             description,
-            image: result.secure_url, // Cloudinary URL
+            image:req.file.path, // Cloudinary URL
             variants,
         });
 
