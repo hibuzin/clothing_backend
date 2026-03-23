@@ -38,7 +38,7 @@ router.post('/',auth,(req, res, next) => {
 
       res.json(category);
     } catch (err) {
-      console.error('❌ CATEGORY ERROR:', err);
+      console.error(' CATEGORY ERROR:', err);
       res.status(500).json({ error: err.message });
     }
   }

@@ -274,9 +274,7 @@ router.put('/:orderId/status', auth, async (req, res) => {
 });
 
 
-/**
- * USER RETURN PRODUCT
- */
+
 router.put('/:orderId/return', auth, async (req, res) => {
     try {
         const { productId, quantity } = req.body;

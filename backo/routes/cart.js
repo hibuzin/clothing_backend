@@ -3,6 +3,7 @@ const auth = require('../middleware/auth');
 const Cart = require('../models/cart');
 const Product = require('../models/product');
 
+
 const router = express.Router();
 
 /**
@@ -20,10 +21,7 @@ router.get('/', auth, async (req, res) => {
     res.json(cart);
 });
 
-/**
- * ADD TO CART
- * POST /api/cart
- */
+
 router.post('/', auth, async (req, res) => {
     try {
         let { productId, color, size, quantity } = req.body;

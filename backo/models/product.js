@@ -17,7 +17,7 @@ const ProductSchema = new mongoose.Schema({
   brand: { type: String, required: true },
   description: { type: String },
   image: { type: String, required: true }, // main product image
-  variants: [VariantSchema], // ✅ includes size-specific images
+  variants: [VariantSchema], 
 
   reviews: [{
     type: mongoose.Schema.Types.ObjectId,
